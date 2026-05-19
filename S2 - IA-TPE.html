@@ -825,6 +825,82 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
   }
 }
 </style>
+<style id="codex-mobile-topbar-order">
+@media (max-width: 767px) {
+  .main-content {
+    padding-top: 18px !important;
+  }
+
+  .module-topbar {
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    align-items: start !important;
+    gap: 12px 12px !important;
+    margin-bottom: 34px !important;
+    padding: 0 !important;
+  }
+
+  .module-topbar > .flex:first-child {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .module-topbar > .flex:first-child > div:last-child {
+    width: auto !important;
+    max-width: none !important;
+    flex: 1 1 auto !important;
+  }
+
+  .module-topbar .module-badge {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    font-size: 16px !important;
+  }
+
+  .module-topbar h1 {
+    font-size: clamp(20px, 5.7vw, 28px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: 0 !important;
+  }
+
+  #topbarSubtitle {
+    margin-top: 8px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    letter-spacing: .18em !important;
+  }
+
+  .module-topbar > .flex:nth-child(2) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 14px !important;
+  }
+
+  .module-topbar > .flex:nth-child(2) > .w-48 {
+    display: block !important;
+    width: min(220px, calc(100vw - 104px)) !important;
+    flex: 1 1 auto !important;
+  }
+
+  .module-topbar > .flex:nth-child(2) > button {
+    flex: 0 0 auto !important;
+  }
+
+  .sidebar-toggle {
+    width: 46px !important;
+    height: 46px !important;
+  }
+}
+</style>
 <style id="codex-nadia-image-fit">
 /* Nadia: fill the existing portrait frame like the other cards. */
 img[alt="Prothésiste ongulaire, seule"] {
