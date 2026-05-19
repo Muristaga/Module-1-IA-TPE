@@ -730,6 +730,7 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
   #s-4 .qcm-transition-3d,
   #s-4 #quizReplayFinal,
   #s-4 #quizAnswersBtn,
+  #s-4 #quizNextFinal,
   .btn {
     width: 100% !important;
     max-width: 100% !important;
@@ -3239,6 +3240,10 @@ function showFinalQuizResult(isPerfectLastAnswer) {
         </button>
         <button id="quizAnswersBtn" onclick="toggleQuizAnswersReview()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/20 dark:border-orange-800/50 dark:text-orange-300 font-extrabold text-[13px] uppercase tracking-widest transition-colors">
           Voir les réponses
+        </button>
+        <button id="quizNextFinal" onclick="goTo(5)" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-violet-600 text-white hover:bg-violet-700 dark:bg-violet-500 dark:hover:bg-violet-400 font-extrabold text-[13px] uppercase tracking-widest shadow-lg shadow-violet-500/20 transition-colors">
+          Et maintenant ?
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
         </button>
       </div>
       <div id="quizAnswersReview" class="hidden"></div>`);
