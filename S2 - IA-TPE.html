@@ -828,24 +828,37 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
 <style id="codex-mobile-topbar-order">
 @media (max-width: 767px) {
   .main-content {
-    padding-top: 18px !important;
+    padding-top: 178px !important;
   }
 
   .module-topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 170 !important;
     display: grid !important;
     grid-template-columns: 52px minmax(0, 1fr) !important;
     grid-template-rows: auto auto !important;
     align-items: start !important;
     gap: 12px 12px !important;
-    margin-bottom: 34px !important;
-    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 16px 18px 14px !important;
+    border-radius: 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(203, 213, 225, .72) !important;
+    background: rgba(248, 250, 252, .94) !important;
+    backdrop-filter: blur(14px) !important;
+    box-shadow: 0 14px 30px -26px rgba(15, 23, 42, .55) !important;
   }
 
   .module-topbar > .flex:first-child {
     grid-column: 2 !important;
     grid-row: 1 !important;
     width: 100% !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     gap: 12px !important;
   }
 
@@ -863,7 +876,7 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
   }
 
   .module-topbar h1 {
-    font-size: clamp(20px, 5.7vw, 28px) !important;
+    font-size: clamp(20px, 5.4vw, 27px) !important;
     line-height: 1.12 !important;
     letter-spacing: 0 !important;
   }
@@ -898,6 +911,13 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
   .sidebar-toggle {
     width: 46px !important;
     height: 46px !important;
+    top: 16px !important;
+    left: 18px !important;
+  }
+
+  .dark .module-topbar {
+    background: rgba(15, 23, 42, .94) !important;
+    border-bottom-color: rgba(51, 65, 85, .8) !important;
   }
 }
 </style>
