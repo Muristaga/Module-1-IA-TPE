@@ -768,6 +768,63 @@ p.body-text { font-size:15px; color:#334155; line-height:1.9; margin-bottom:20px
   }
 }
 </style>
+<style id="codex-mobile-performance-smooth">
+@media (max-width: 900px) {
+  img,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
+  }
+
+  pre,
+  table,
+  .diag-table-shell {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .section {
+    animation-duration: .38s !important;
+  }
+
+  .timeline-reveal,
+  .timeline-item,
+  .intro-step {
+    animation-duration: .42s !important;
+  }
+
+  .progress-fill,
+  #diagProgressBar,
+  #qcmProgressBar {
+    transition-duration: .4s !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    animation-duration: .28s !important;
+  }
+
+  .timeline-reveal,
+  .timeline-item,
+  .intro-step {
+    animation-duration: .32s !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
 <style id="codex-nadia-image-fit">
 /* Nadia: fill the existing portrait frame like the other cards. */
 img[alt="Prothésiste ongulaire, seule"] {
