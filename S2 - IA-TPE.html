@@ -1544,10 +1544,10 @@ img[alt="Prothésiste ongulaire, seule"] {
         <span class="font-bold">Ces TPE Utilisent Déjà l'IA. Retrouvez-vous.</span>
       </h2>
       <p class="body-text mt-6 dark:text-slate-300">Six profils, six métiers, six façons d'utiliser l'IA au quotidien. Cliquez pour voir leurs solutions.</p>
-      <div class="lesson-scroll-cue" role="button" tabindex="0" aria-label="Afficher les profils" onclick="revealSectionContent('s22-content-cards', initPortraits)" onkeydown="handleRevealSectionKey(event, 's22-content-cards', initPortraits)"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg></div>
+      <div class="lesson-scroll-cue" role="button" tabindex="0" aria-label="Afficher les profils" onclick="initPortraits(); scrollToSectionContent('s22-content-cards')" onkeydown="handleScrollCueKey(event, 's22-content-cards')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg></div>
     </div>
     
-    <div id="s22-content-cards" class="section-reveal-collapsed">
+    <div id="s22-content-cards">
     <div class="relative w-full mb-8">
       <!-- Flèche Gauche épaissie -->
       <button id="btn-prev-portrait" onclick="scrollPortraits(-1)" class="absolute carousel-btn-left top-[130px] z-30 w-12 h-12 bg-white dark:bg-slate-800 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-all hover:text-violet-600 hover:scale-110">
@@ -2043,7 +2043,7 @@ function goTo(idx) {
       }
   }
   if (idx === 1) resetSectionReveal('s21-content-cards');
-  if (idx === 2) resetSectionReveal('s22-content-cards');
+  if (idx === 2) initPortraits();
   if (idx === 3) resetS23DiagnosticReveal();
   window.scrollTo(0, 0);
 
