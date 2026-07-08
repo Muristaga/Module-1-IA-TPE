@@ -1,0 +1,1010 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparateur d'Impact : Web vs IA</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar for better look */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3c4043; border-radius: 4px; }
+        
+        /* Animations */
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes impactItemIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes impactActionSlideIn {
+          0% { opacity: 0; transform: translateX(42px) scale(.97); }
+          72% { opacity: 1; transform: translateX(-2px) scale(1.03); }
+          100% { opacity: 1; transform: translateX(0) scale(1); }
+        }
+        @keyframes impactActionPulse {
+          0%, 100% { transform: translateX(0) scale(1); box-shadow: 0 18px 34px -22px rgba(245,158,11,.85); }
+          50% { transform: translateX(0) scale(1.045); box-shadow: 0 20px 42px -16px rgba(245,158,11,.95); }
+        }
+        .stagger-item {
+          opacity: 0;
+          animation: impactItemIn .9s cubic-bezier(.22,1,.36,1) forwards;
+        }
+        .impact-justify {
+          text-align: justify;
+          text-justify: inter-word;
+        }
+        .impact-replay-btn {
+          min-width: 148px;
+          height: 42px;
+          padding: 0 18px;
+          border: 1px solid rgba(245,158,11,.55);
+          border-radius: 999px;
+          background: rgba(245,158,11,.14);
+          color: #f59e0b;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 18px 34px -22px rgba(245,158,11,.85);
+          transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          opacity: 0;
+          animation-fill-mode: both;
+        }
+        .impact-action-row {
+          width: min(1240px, calc(100% - 56px));
+          margin: 8px auto 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 40px;
+        }
+        .impact-replay-btn.impact-replay-web {
+          animation:
+            impactActionSlideIn 1.15s cubic-bezier(.22,1,.36,1) 3.85s both,
+            impactActionPulse 1.9s ease-in-out 5.25s 2 both;
+        }
+        .impact-replay-btn.impact-replay-compare {
+          animation:
+            impactActionSlideIn 1.15s cubic-bezier(.22,1,.36,1) 4.55s both,
+            impactActionPulse 1.9s ease-in-out 6s 2 both;
+        }
+        .impact-summary-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 20px;
+        }
+        .impact-summary-card {
+          min-width: 0;
+        }
+        .platform-logo {
+          width: 24px;
+          height: 24px;
+          object-fit: contain;
+          flex: 0 0 auto;
+        }
+        .platform-logo-lg {
+          width: 38px;
+          height: 38px;
+          object-fit: contain;
+        }
+        .summary-title {
+          font-size: clamp(24px, 3vw, 34px);
+          line-height: 1.12;
+          font-weight: 560;
+        }
+        .impact-replay-btn:hover {
+          background: rgba(245,158,11,.22);
+          transform: translateY(-1px) scale(1.04);
+          box-shadow: 0 20px 42px -20px rgba(245,158,11,.95);
+        }
+        .impact-replay-btn svg {
+          width: 17px;
+          height: 17px;
+          overflow: visible;
+        }
+        .impact-step-title {
+          width: min(1240px, calc(100% - 56px));
+          margin: 10px auto 8px;
+          color: #f8fafc;
+          font-size: 18px;
+          line-height: 1.15;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          flex: 0 0 auto;
+        }
+        .impact-replay-btn .replay-arrow-one,
+        .impact-replay-btn .replay-arrow-two {
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .impact-replay-btn .replay-arrow-two {
+          opacity: .78;
+        }
+        .impact-step-layout {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: stretch;
+          justify-content: center;
+          overflow: hidden;
+          padding-top: 6px;
+          width: min(1240px, calc(100% - 56px)) !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+        .impact-step-main {
+          flex: 0 1 min(650px, 72%);
+          min-width: 0;
+          transition: flex-basis .52s cubic-bezier(.22,1,.36,1), max-width .52s cubic-bezier(.22,1,.36,1), transform .52s cubic-bezier(.22,1,.36,1);
+        }
+        .impact-step-layout.impact-step-ready {
+          justify-content: stretch;
+        }
+        .impact-step-layout.impact-step-ready .impact-step-main {
+          flex: 0 1 58%;
+          max-width: none;
+        }
+        .impact-step-feedback {
+          flex: 0 0 40%;
+          min-width: 240px;
+          transition: opacity .42s cubic-bezier(.22,1,.36,1), transform .42s cubic-bezier(.22,1,.36,1), flex-basis .52s cubic-bezier(.22,1,.36,1), min-width .52s cubic-bezier(.22,1,.36,1), padding .52s cubic-bezier(.22,1,.36,1);
+        }
+        .impact-web-feedback {
+          align-items: flex-start !important;
+          padding-top: 4px !important;
+        }
+        .impact-feedback-hidden {
+          opacity: 0;
+          transform: translateX(18px) scale(.985);
+          pointer-events: none;
+          visibility: hidden;
+          flex-basis: 0 !important;
+          min-width: 0 !important;
+          width: 0 !important;
+          padding: 0 !important;
+          border-left-width: 0 !important;
+          overflow: hidden;
+        }
+        .impact-feedback-visible {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+          pointer-events: auto;
+          visibility: visible;
+          flex-basis: 42%;
+        }
+        .impact-ai-feedback-shell {
+          background:
+            radial-gradient(circle at 18% 20%, rgba(148,163,184,.10), transparent 30%),
+            radial-gradient(circle at 82% 76%, rgba(245,158,11,.12), transparent 34%),
+            linear-gradient(145deg, #121212 0%, #080808 58%, #14100b 100%);
+        }
+        .impact-ai-feedback-card {
+          width: 100%;
+          border: 1px solid rgba(251,146,60,.26);
+          border-left: 4px solid #f59e0b;
+          border-radius: 16px;
+          background: rgba(15,15,15,.92);
+          box-shadow: 0 22px 42px -34px rgba(245,158,11,.58);
+          padding: 15px;
+          overflow: hidden;
+          position: relative;
+        }
+        .impact-ai-feedback-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(251,146,60,.055) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(251,146,60,.045) 1px, transparent 1px);
+          background-size: 22px 22px;
+          mask-image: linear-gradient(to bottom, rgba(0,0,0,.72), transparent);
+          pointer-events: none;
+        }
+        .impact-ai-metric {
+          position: relative;
+          border: 1px solid rgba(148,163,184,.18);
+          background: rgba(0,0,0,.34);
+          border-radius: 12px;
+          padding: 9px 10px;
+        }
+        .impact-ai-meter {
+          height: 5px;
+          overflow: hidden;
+          border-radius: 999px;
+          background: rgba(255,255,255,.10);
+        }
+        .impact-ai-meter span {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          box-shadow: 0 0 18px currentColor;
+        }
+        .impact-ai-alert {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          border-radius: 12px;
+          border: 1px solid rgba(251,146,60,.28);
+          background: rgba(245,158,11,.10);
+          color: #fed7aa;
+          padding: 9px 10px;
+          font-size: 11px;
+          line-height: 1.35;
+          font-weight: 600;
+        }
+        .impact-topbar {
+          height: 54px;
+        }
+        .impact-page-offset {
+          margin-top: 54px;
+        }
+        .impact-demo-panel {
+          min-height: 360px !important;
+        }
+        .impact-search-surface {
+          min-height: 320px !important;
+        }
+        @media (max-height: 760px) {
+          .impact-topbar {
+            height: 50px;
+          }
+          .impact-page-offset {
+            margin-top: 50px;
+          }
+          .impact-demo-panel {
+            min-height: 340px !important;
+          }
+          .impact-search-surface {
+            min-height: 300px !important;
+          }
+        }
+        @media (max-width: 760px) {
+          .impact-summary-grid {
+            gap: 12px;
+          }
+          .impact-summary-card {
+            padding: 16px !important;
+          }
+          .impact-summary-card strong,
+          .impact-summary-card span {
+            font-size: 12px;
+          }
+        }
+    </style>
+</head>
+<body class="bg-black text-slate-200 font-sans selection:bg-red-900/50 m-0 p-0 overflow-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS DEFINITIONS (Lucide-react alternatives for standalone HTML) ---
+        const SvgWrapper = ({ className, children }) => (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            {children}
+          </svg>
+        );
+        const Search = (p) => <SvgWrapper {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></SvgWrapper>;
+        const Plus = (p) => <SvgWrapper {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></SvgWrapper>;
+        const ChevronDown = (p) => <SvgWrapper {...p}><polyline points="6 9 12 15 18 9"/></SvgWrapper>;
+        const ChevronUp = (p) => <SvgWrapper {...p}><polyline points="18 15 12 9 6 15"/></SvgWrapper>;
+        const Mic = (p) => <SvgWrapper {...p}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></SvgWrapper>;
+        const Camera = (p) => <SvgWrapper {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></SvgWrapper>;
+        const Menu = (p) => <SvgWrapper {...p}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></SvgWrapper>;
+        const Settings = (p) => <SvgWrapper {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></SvgWrapper>;
+        const History = (p) => <SvgWrapper {...p}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></SvgWrapper>;
+        const PenTool = (p) => <SvgWrapper {...p}><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></SvgWrapper>;
+        const ImageIcon = (p) => <SvgWrapper {...p}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></SvgWrapper>;
+        const Music = (p) => <SvgWrapper {...p}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></SvgWrapper>;
+        const Video = (p) => <SvgWrapper {...p}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></SvgWrapper>;
+        const Sparkles = (p) => <SvgWrapper {...p}><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></SvgWrapper>;
+        const Cloud = (p) => <SvgWrapper {...p}><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></SvgWrapper>;
+        const Droplets = (p) => <SvgWrapper {...p}><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7 2.9 7 2.9s-2.28 6.16-2.29 6.16C3.57 10 3 11.08 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></SvgWrapper>;
+        const Sun = (p) => <SvgWrapper {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></SvgWrapper>;
+        const Flame = (p) => <SvgWrapper {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></SvgWrapper>;
+        const Zap = (p) => <SvgWrapper {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></SvgWrapper>;
+        const Globe = (p) => <SvgWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></SvgWrapper>;
+        const XOctagon = (p) => <SvgWrapper {...p}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></SvgWrapper>;
+        const Activity = (p) => <SvgWrapper {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></SvgWrapper>;
+        const Terminal = (p) => <SvgWrapper {...p}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></SvgWrapper>;
+        const AlertTriangle = (p) => <SvgWrapper {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></SvgWrapper>;
+        const RefreshCw = (p) => <SvgWrapper {...p}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></SvgWrapper>;
+
+        // --- SCENARIOS ---
+        const SCENARIOS = [
+          {
+            query: "Quel temps fait-il demain ?",
+            tokens: [
+              { text: "Demain, ", prob: "99.8%", compute: "Tokenisation + routage GPU" },
+              { text: "les températures devraient aller de 9°C à 14°C. ", prob: "99.9%", compute: "Attention multi-têtes" },
+              { text: "Le matin sera frais, avec un risque de pluie autour de 40%. ", prob: "95.2%", compute: "Calcul des probabilités" },
+              { text: "L'après-midi devrait être plus clair, ", prob: "98.7%", compute: "Mise à jour du contexte" },
+              { text: "puis la soirée restera autour de 11°C avec un vent modéré. ", prob: "94.4%", compute: "Génération token par token" },
+              { text: "Pour une prévision locale fiable, vérifiez directement une source météo.", prob: "99.1%", compute: "Stop sequence" },
+              { text: "", prob: "99.9%", compute: "Stop_Token_Reached" }
+            ],
+            googleTitle: "Météo demain - Prévisions fiables",
+            googleList: [
+              "Matin : 9°C, risque de précipitations 40%",
+              "Après-midi : 14°C, belles éclaircies",
+              "Soir : 11°C, vent modéré"
+            ],
+            googleLink: "meteofrance.com › previsions-meteo",
+            geminiTitle: "Prévisions Météorologiques",
+            geminiContent: (
+              <React.Fragment>
+                D'après les relevés météorologiques, voici les prévisions pour demain :<br/><br/>
+                - <strong className="text-white">Températures :</strong> Comprises entre 9°C le matin et 14°C l'après-midi.<br/>
+                - <strong className="text-white">État du ciel :</strong> Nuageux avec quelques précipitations.<br/><br/>
+                <em className="text-[#a8c7fa]">Pensez à prévoir un parapluie !</em>
+              </React.Fragment>
+            ),
+            absurdity: "demander à un LLM surpuissant de faire ce que l'application météo de votre téléphone affiche déjà gratuitement"
+          },
+          {
+            query: "Quels sont les jours fériés de cette année ?",
+            tokens: [
+              { text: "Voici les principaux jours fériés en France cette année : ", prob: "99.8%", compute: "Context extraction" },
+              { text: "Jour de l'An, Lundi de Pâques, Fête du Travail, Victoire 1945, ", prob: "99.9%", compute: "Attention multi-têtes" },
+              { text: "Ascension, Lundi de Pentecôte, Fête nationale, Assomption, ", prob: "95.2%", compute: "KV cache update" },
+              { text: "Toussaint, Armistice et Noël. ", prob: "98.7%", compute: "Décodage token" },
+              { text: "Pour les dates exactes, le site service-public.fr reste la source directe.", prob: "99.1%", compute: "Stop sequence" }
+            ],
+            googleTitle: "Jours fériés en France : le calendrier complet",
+            googleList: [
+              "1er janvier : Jour de l'An",
+              "1er avril : Lundi de Pâques",
+              "1er mai : Fête du Travail",
+              "8 mai : Victoire 1945"
+            ],
+            googleLink: "service-public.fr › particuliers › vosdroits",
+            geminiTitle: "Calendrier des Jours Fériés",
+            geminiContent: (
+              <React.Fragment>
+                L'année compte 11 jours fériés en France. En voici la liste chronologique :<br/><br/>
+                - <strong className="text-white">1er janvier :</strong> Jour de l'An<br/>
+                - <strong className="text-white">1er avril :</strong> Lundi de Pâques<br/>
+                - <strong className="text-white">1er mai :</strong> Fête du Travail<br/>
+                - <strong className="text-white">8 mai :</strong> Victoire 1945<br/>
+                - <strong className="text-white">9 mai :</strong> Ascension<br/>
+              </React.Fragment>
+            ),
+            absurdity: "utiliser des réseaux neuronaux profonds et brûler du charbon pour générer un calendrier statique de l'État français"
+          },
+          {
+            query: "Comment faire des glaçons ?",
+            tokens: [
+              { text: "Pour faire des glaçons, ", prob: "99.8%", compute: "Word embeddings" },
+              { text: "remplissez un bac à glaçons avec de l'eau potable. ", prob: "99.9%", compute: "Attention multi-têtes" },
+              { text: "Placez-le bien à plat dans le congélateur. ", prob: "95.2%", compute: "KV cache lookup" },
+              { text: "Après quelques heures, l'eau sera solidifiée. ", prob: "98.7%", compute: "Décodage token" },
+              { text: "C'est une question qui ne nécessite pas vraiment d'IA.", prob: "99.1%", compute: "Stop sequence" }
+            ],
+            googleTitle: "Comment faire des glaçons rapidement ?",
+            googleList: [
+              "Prenez un bac à glaçons vide.",
+              "Remplissez-le d'eau froide ou à température ambiante.",
+              "Placez le bac bien à plat dans votre congélateur.",
+              "Patientez entre 2 et 4 heures jusqu'à congélation complète."
+            ],
+            googleLink: "Marmiton.org › astuces › comment-faire-des-glacons",
+            geminiTitle: "Recette : Glaçons",
+            geminiContent: (
+              <React.Fragment>
+                Voici la méthode étape par étape pour préparer des glaçons :<br/><br/>
+                <strong className="text-white">1. Préparation :</strong> Munissez-vous d'un bac à glaçons.<br/>
+                <strong className="text-white">2. Remplissage :</strong> Versez de l'eau claire dans chaque compartiment.<br/>
+                <strong className="text-white">3. Congélation :</strong> Mettez le bac au congélateur (-18°C) pendant environ 3 heures.<br/><br/>
+                <em className="text-[#a8c7fa]">Astuce : Utilisez de l'eau chaude pour obtenir des glaçons plus transparents.</em>
+              </React.Fragment>
+            ),
+            absurdity: "savoir comment faire de l'eau solide"
+          },
+          {
+            query: "Quelle est la couleur du cheval blanc d'Henri IV ?",
+            tokens: [
+              { text: "La réponse est contenue dans la question : ", prob: "99.8%", compute: "Context analysis" },
+              { text: "le cheval blanc d'Henri IV est blanc. ", prob: "99.9%", compute: "Attention multi-têtes" },
+              { text: "C'est une devinette classique, ", prob: "99.2%", compute: "KV cache lookup" },
+              { text: "pas une demande qui justifie une génération longue.", prob: "98.7%", compute: "Stop sequence" }
+            ],
+            googleTitle: "Couleur du cheval blanc d'Henri IV - Wikipédia",
+            googleList: [
+              "Il s'agit d'une devinette ou blague enfantine classique.",
+              "La réponse est contenue dans la question elle-même : il est blanc.",
+              "Historiquement, Henri IV montait souvent des chevaux gris ou blancs lors des batailles."
+            ],
+            googleLink: "fr.wikipedia.org › wiki › Cheval_blanc_d'Henri_IV",
+            geminiTitle: "Analyse Historique et Logique",
+            geminiContent: (
+              <React.Fragment>
+                Après une analyse linguistique de votre requête, la réponse est une tautologie évidente :<br/><br/>
+                <strong className="text-white">Le cheval blanc d'Henri IV était blanc.</strong><br/><br/>
+                Cette question est généralement posée comme une devinette humoristique pour tester l'attention de l'interlocuteur.
+              </React.Fragment>
+            ),
+            absurdity: "utiliser l'intelligence artificielle la plus avancée du monde pour répondre à une blague de cour de récréation"
+          }
+        ];
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+          const [scenarioIndex, setScenarioIndex] = useState(0);
+          const currentScenario = SCENARIOS[scenarioIndex];
+          const QUERY_TEXT = currentScenario.query;
+          const INITIAL_TYPED_TEXT = QUERY_TEXT.slice(0, 4);
+
+          const [globalPhase, setGlobalPhase] = useState('typing'); // 'idle' | 'typing' | 'running' | 'done'
+          const [googlePhase, setGooglePhase] = useState('idle'); // 'idle' | 'generating' | 'finished'
+          const [geminiPhase, setGeminiPhase] = useState('idle'); // 'idle' | 'generating' | 'finished'
+          const [demoStep, setDemoStep] = useState('google'); // 'google' | 'gemini' | 'summary'
+          
+          const [typedText, setTypedText] = useState(INITIAL_TYPED_TEXT);
+          const AUTO_START_DELAY_MS = 800;
+          
+          // Métriques Gemini
+          const [guilt, setGuilt] = useState({ water: 0, co2: 0, energy: 0 });
+          const [activeTokenIndex, setActiveTokenIndex] = useState(-1);
+          const [showReasoning, setShowReasoning] = useState(false);
+
+          const tokens = currentScenario.tokens;
+          const visibleGeminiTokens = tokens.slice(0, Math.max(0, activeTokenIndex + 1));
+          const generatedGeminiText = visibleGeminiTokens.map(token => token.text).join("");
+          const fullGeminiText = tokens.map(token => token.text).join("");
+          const platformPair = scenarioIndex % 2 === 0
+            ? {
+                web: { name: "Google Chrome", shortName: "Chrome", placeholder: "Rechercher avec Google Chrome", accent: "#8ab4f8", logo: "https://cdn.simpleicons.org/googlechrome" },
+                ai: { name: "Gemini", placeholder: "Demander à Gemini", iconColor: "text-blue-400", promptColor: "text-[#a8c7fa]", logo: "https://cdn.simpleicons.org/googlegemini" }
+              }
+            : {
+                web: { name: "Firefox", shortName: "Firefox", placeholder: "Rechercher avec Firefox", accent: "#ff7139", logo: "https://cdn.simpleicons.org/firefoxbrowser" },
+                ai: { name: "Claude", placeholder: "Demander à Claude", iconColor: "text-orange-300", promptColor: "text-orange-300", logo: "https://cdn.simpleicons.org/claude" }
+              };
+          const PlatformLogo = ({ platform, large = false }) => (
+            <img src={platform.logo} alt="" className={large ? "platform-logo-lg" : "platform-logo"} />
+          );
+
+          const reportHeight = () => {
+            const shell = document.querySelector('[data-impact-shell]');
+            const height = Math.ceil(shell
+              ? shell.getBoundingClientRect().height
+              : Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)
+            );
+            if (window.parent) {
+              window.parent.postMessage({ type: 'env-impact-height', height }, '*');
+            }
+          };
+
+          useEffect(() => {
+            reportHeight();
+            const frame = requestAnimationFrame(reportHeight);
+            const t1 = setTimeout(reportHeight, 80);
+            const t2 = setTimeout(reportHeight, 620);
+            const t3 = setTimeout(reportHeight, 1700);
+            return () => {
+              cancelAnimationFrame(frame);
+              clearTimeout(t1);
+              clearTimeout(t2);
+              clearTimeout(t3);
+            };
+          }, [demoStep, globalPhase, googlePhase, geminiPhase, showReasoning, activeTokenIndex, scenarioIndex]);
+
+          useEffect(() => {
+            if (!window.ResizeObserver) return;
+            const observer = new ResizeObserver(reportHeight);
+            observer.observe(document.body);
+            return () => observer.disconnect();
+          }, []);
+
+          // EFFET DE FRAPPE UNIFIÉ
+          useEffect(() => {
+            if (globalPhase === 'typing') {
+              let i = Math.max(0, Math.min(QUERY_TEXT.length, typedText ? typedText.length : 0));
+              let interval = null;
+              let holdTimer = null;
+              const runTyping = () => {
+                interval = setInterval(() => {
+                  setTypedText(QUERY_TEXT.slice(0, i + 1));
+                  i++;
+                  if (i >= QUERY_TEXT.length) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                      setGlobalPhase('running');
+                      setGooglePhase(demoStep === 'google' ? 'generating' : 'idle');
+                      setGeminiPhase(demoStep === 'gemini' ? 'generating' : 'idle');
+                      setShowReasoning(false);
+                    }, 1600); 
+                  }
+                }, 125);
+              };
+              if (typedText === INITIAL_TYPED_TEXT) {
+                holdTimer = setTimeout(runTyping, AUTO_START_DELAY_MS);
+              } else {
+                runTyping();
+              }
+              return () => {
+                if (holdTimer) clearTimeout(holdTimer);
+                if (interval) clearInterval(interval);
+              };
+            }
+          }, [globalPhase, QUERY_TEXT, demoStep]);
+
+          // LOGIQUE GOOGLE (Très rapide)
+          useEffect(() => {
+            if (googlePhase === 'generating') {
+              setTimeout(() => {
+                setGooglePhase('finished');
+              }, 1600);
+            }
+          }, [googlePhase]);
+
+          // LOGIQUE GEMINI (Lent et gourmand)
+          useEffect(() => {
+            if (geminiPhase === 'generating') {
+              let currentToken = -1;
+              const tokenInterval = setInterval(() => {
+                currentToken++;
+                if (currentToken < tokens.length) {
+                  setActiveTokenIndex(currentToken);
+                  setGuilt(prev => ({
+                    water: prev.water + 2.8, 
+                    co2: prev.co2 + 0.9, 
+                    energy: prev.energy + 1.5 
+                  }));
+                } else {
+                  clearInterval(tokenInterval);
+                  setGeminiPhase('finished');
+                }
+              }, 1150); 
+              return () => clearInterval(tokenInterval);
+            }
+          }, [geminiPhase, tokens.length]);
+
+          // Sync Global Phase
+          useEffect(() => {
+            if (
+              (demoStep === 'google' && googlePhase === 'finished') ||
+              (demoStep === 'gemini' && geminiPhase === 'finished')
+            ) {
+              setGlobalPhase('done');
+            }
+          }, [googlePhase, geminiPhase, demoStep]);
+
+          const startSimulation = () => {
+            if (globalPhase !== 'idle') return;
+            setTypedText(INITIAL_TYPED_TEXT);
+            setGlobalPhase('typing');
+            setGuilt({ water: 0, co2: 0, energy: 0 });
+            setActiveTokenIndex(-1);
+            setShowReasoning(false);
+          };
+
+          useEffect(() => {
+            if (demoStep === 'summary' || globalPhase !== 'idle') return;
+            setShowReasoning(false);
+            const timer = setTimeout(() => {
+              setGlobalPhase('typing');
+              setTypedText(INITIAL_TYPED_TEXT);
+              setGuilt({ water: 0, co2: 0, energy: 0 });
+              setActiveTokenIndex(-1);
+            }, AUTO_START_DELAY_MS);
+            return () => clearTimeout(timer);
+          }, [demoStep, scenarioIndex, globalPhase]);
+
+          const reset = () => {
+            setGlobalPhase('typing');
+            setGooglePhase('idle');
+            setGeminiPhase('idle');
+            setTypedText(INITIAL_TYPED_TEXT);
+            setGuilt({ water: 0, co2: 0, energy: 0 });
+            setActiveTokenIndex(-1);
+            setShowReasoning(false);
+          };
+
+          const goToGeminiStep = () => {
+            reset();
+            setDemoStep('gemini');
+          };
+
+          const goToSummaryStep = () => {
+            setDemoStep('summary');
+            setGlobalPhase('done');
+          };
+
+          const restartProgression = () => {
+            setScenarioIndex((prev) => (prev + 1) % SCENARIOS.length);
+            setDemoStep('google');
+            setGlobalPhase('typing');
+            setGooglePhase('idle');
+            setGeminiPhase('idle');
+            setTypedText(INITIAL_TYPED_TEXT);
+            setGuilt({ water: 0, co2: 0, energy: 0 });
+            setActiveTokenIndex(-1);
+            setShowReasoning(false);
+          };
+
+          const GoogleLogoMini = () => (
+            <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"></path>
+              <path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"></path>
+              <path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"></path>
+              <path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"></path>
+            </svg>
+          );
+
+          return (
+            <div data-impact-shell className="w-full bg-black text-slate-200 p-0 m-0 font-sans flex flex-col selection:bg-red-900/50 relative overflow-hidden">
+              
+              {/* BANDEAU INDICATIF PERMANENT */}
+              <div className="impact-topbar fixed top-0 left-0 w-full bg-[#0a0a0a] border-b border-slate-800 flex items-center justify-between px-5 z-50 shadow-md">
+                <div className="flex items-center gap-3">
+                  <XOctagon className="w-5 h-5 text-red-600" />
+                  <span className="font-bold text-slate-300 tracking-widest uppercase text-xs">Comparateur d'Impact : Web vs IA</span>
+                </div>
+                <div className="hidden" aria-hidden="true"></div>
+                {globalPhase !== 'idle' ? (
+                  <button onClick={() => {
+                    setGlobalPhase('typing');
+                    setGooglePhase('idle');
+                    setGeminiPhase('idle');
+                    setTypedText(INITIAL_TYPED_TEXT);
+                    setDemoStep('google');
+                    setGuilt({ water: 0, co2: 0, energy: 0 });
+                    setActiveTokenIndex(-1);
+                    setShowReasoning(false);
+                  }} className="text-xs text-slate-300 hover:text-white uppercase tracking-wider font-bold px-4 py-1.5 bg-[#1e1e20] rounded border border-slate-700 hover:border-slate-500 transition-colors">
+                    Réinitialiser
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-500 uppercase tracking-widest animate-pulse">Démarrage automatique dans 0,8 seconde</span>
+                )}
+              </div>
+
+              <div className={`${demoStep === 'summary' ? 'flex' : 'hidden'} impact-page-offset flex-1 w-full pb-24 items-center justify-center p-8 bg-black`}>
+                  <div className="w-full max-w-5xl grid gap-5 animate-fade-in">
+                    <div className="text-center">
+                      <div className="text-xs text-orange-400 font-medium uppercase tracking-[0.22em] mb-2">Résumé général</div>
+                      <h2 className="summary-title text-white">Même question, deux chemins très différents</h2>
+                    </div>
+                    <div className="impact-summary-grid">
+                      <div className="impact-summary-card bg-emerald-950/25 border border-emerald-800/60 rounded-2xl p-5">
+                        <div className="flex items-center gap-3 text-emerald-300 font-medium uppercase tracking-wider mb-4 text-sm">
+                          <PlatformLogo platform={platformPair.web} /> {platformPair.web.name}
+                        </div>
+                        <div className="space-y-2 text-slate-200 text-sm">
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>Temps</span><strong className="font-medium">0.22 s</strong></div>
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>Eau</span><strong className="font-medium">0.0 ml</strong></div>
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>CO2</span><strong className="font-medium">~0.2 g</strong></div>
+                        </div>
+                      </div>
+                      <div className="impact-summary-card bg-red-950/30 border border-red-800/70 rounded-2xl p-5">
+                        <div className="flex items-center gap-3 text-red-300 font-medium uppercase tracking-wider mb-4 text-sm">
+                          <PlatformLogo platform={platformPair.ai} /> {platformPair.ai.name}
+                        </div>
+                        <div className="space-y-2 text-slate-200 text-sm">
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>Calcul</span><strong className="font-medium">tokens générés</strong></div>
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>Eau</span><strong className="font-medium">{guilt.water.toFixed(1)} cl</strong></div>
+                          <div className="flex justify-between bg-black/35 rounded-xl px-3 py-2"><span>CO2</span><strong className="font-medium">{guilt.co2.toFixed(1)} g</strong></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-[#111827] border border-slate-700 rounded-2xl p-5 text-center">
+                      <p className="impact-justify text-base md:text-lg text-white font-medium leading-snug">
+                        Pour une information simple, la source directe suffit. Gardez l'IA pour rédiger, analyser, comparer ou structurer.
+                      </p>
+                    </div>
+                    <div className="flex justify-center">
+                      <button onClick={restartProgression} className="px-5 py-2.5 rounded-full bg-orange-500 text-black font-medium uppercase tracking-wider hover:bg-orange-400 transition-colors text-sm">
+                        Tester un autre cas
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              {/* ZONE PRINCIPALE PROGRESSIVE */}
+              <div className={`${demoStep !== 'summary' ? 'flex' : 'hidden'} impact-page-offset flex-1 w-full flex-col pb-4`}>
+                <div className="impact-step-title">
+                  {demoStep === 'google' ? '1- Recherche Web' : '2- Recherche IA'}
+                </div>
+                
+                {/* ==================================================== */}
+                {/* MOITIÉ SUPÉRIEURE : GOOGLE (Haut Gauche / Haut Droite) */}
+                {/* ==================================================== */}
+                <div className={`${demoStep === 'google' ? 'impact-step-layout' : 'hidden'} ${googlePhase === 'finished' ? 'impact-step-ready' : ''} impact-demo-panel w-full border-b-4 lg:border-b-0 border-black`}>
+                  
+                  {/* HAUT GAUCHE : UI GOOGLE */}
+                  <div className="impact-step-main impact-search-surface bg-[#202124] relative flex flex-col">
+                    {(googlePhase === 'idle' || googlePhase === 'typing') ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-6">
+                        <div className="flex flex-col items-center gap-3 text-[2.25rem] font-sans text-white tracking-tight mb-5 leading-none select-none">
+                          <PlatformLogo platform={platformPair.web} large />
+                          {platformPair.web.shortName}
+                        </div>
+                        <div 
+                          onClick={startSimulation}
+                          className="w-full max-w-[420px] bg-white rounded-full px-4 py-2.5 flex items-center gap-3 shadow-md cursor-text hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] transition-all"
+                        >
+                          <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                          <span className="text-[#202124] flex-1 text-sm flex items-center h-6 overflow-hidden truncate">
+                            {typedText ? (
+                              <React.Fragment>{typedText}<span className="w-[1px] h-5 bg-black inline-block ml-[1px] animate-pulse"></span></React.Fragment>
+                            ) : (
+                              <span className="text-[#5f6368]">{platformPair.web.placeholder}</span>
+                            )}
+                          </span>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <Mic className="w-4 h-4 text-blue-500" />
+                            <Camera className="w-4 h-4 text-blue-500" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex flex-col pt-4 px-5 pb-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center gap-2 text-[1.1rem] font-sans text-white tracking-tight leading-none select-none">
+                            <PlatformLogo platform={platformPair.web} />
+                            {platformPair.web.shortName}
+                          </div>
+                          <div className="flex-1 max-w-[430px] bg-[#303134] border border-transparent rounded-full px-3.5 py-1.5 flex items-center gap-3">
+                            <span className="text-[#e8eaed] flex-1 text-sm truncate">{QUERY_TEXT}</span>
+                            <Search className="w-5 h-5" style={{ color: platformPair.web.accent }} />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-5 text-xs text-[#9aa0a6] mb-4 border-b border-[#3c4043] pb-2">
+                          <div className="font-medium border-b-2 pb-1" style={{ color: platformPair.web.accent, borderBottomColor: platformPair.web.accent }}>Tous</div>
+                          <div className="cursor-pointer hover:text-white">Actualités</div>
+                          <div className="cursor-pointer hover:text-white">Images</div>
+                        </div>
+
+                        {googlePhase === 'generating' ? (
+                          <div className="w-full h-1 bg-transparent overflow-hidden mb-4">
+                            <div className="h-full w-1/3 animate-[pulse_0.5s_ease-in-out_infinite]" style={{ backgroundColor: platformPair.web.accent }}></div>
+                          </div>
+                        ) : (
+                          <div className="max-w-[430px] animate-fade-in origin-top-left">
+                            <div className="text-xs text-[#9aa0a6] mb-2">Environ 3 450 000 résultats (0.22 secondes)</div>
+                            <div className="border border-[#3c4043] rounded-xl p-3.5 bg-[#303134] flex flex-col shadow-md">
+                              <div className="impact-justify text-[15px] text-white font-normal mb-2.5 leading-snug">
+                                {currentScenario.googleTitle}
+                              </div>
+                              <ol className="impact-justify list-decimal pl-5 text-[#bdc1c6] text-[12px] space-y-1.5 mb-2.5">
+                                {currentScenario.googleList.map((item, idx) => (
+                                  <li key={idx}>{item}</li>
+                                ))}
+                              </ol>
+                              <div className="text-[12px] cursor-pointer hover:underline mt-1" style={{ color: platformPair.web.accent }}>
+                                {currentScenario.googleLink}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* HAUT DROITE : FEEDBACK GOOGLE */}
+                  <div className={`impact-step-feedback impact-web-feedback min-h-full bg-[#17181a] border-l border-[#3c4043] flex items-center justify-center p-5 relative ${googlePhase === 'finished' ? 'impact-feedback-visible' : 'impact-feedback-hidden'}`}>
+                    {googlePhase === 'finished' && (
+                      <div className="w-full max-w-[320px] flex flex-col gap-4 bg-emerald-950/20 border border-emerald-900/50 p-5 rounded-2xl shadow-inner animate-fade-in relative overflow-hidden">
+                         <div className="absolute left-0 top-0 w-2 h-full bg-emerald-500"></div>
+                         <div className="stagger-item flex items-center gap-3" style={{ animationDelay: '.25s' }}>
+                           <Globe className="w-6 h-6 text-emerald-500" />
+                           <span className="text-sm font-bold text-[#4ade80] uppercase tracking-wider">
+                             Recherche Écologique
+                           </span>
+                         </div>
+                         <p className="stagger-item impact-justify text-xs text-slate-300 leading-relaxed" style={{ animationDelay: '1.05s' }}>
+                           Requête classique via l'index Web. L'information a été récupérée instantanément avec une dépense matérielle dérisoire.
+                         </p>
+                         <div className="flex flex-col gap-3 mt-3">
+                           <div className="stagger-item flex justify-between items-center text-xs font-mono bg-black/40 px-3 py-2.5 rounded text-emerald-300" style={{ animationDelay: '1.85s' }}>
+                             <span>Émissions CO2 :</span> <span>~0.2 g</span>
+                           </div>
+                           <div className="stagger-item flex justify-between items-center text-xs font-mono bg-black/40 px-3 py-2.5 rounded text-emerald-300" style={{ animationDelay: '2.55s' }}>
+                             <span>Eau consommée :</span> <span>0.0 ml</span>
+                           </div>
+                         </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ==================================================== */}
+                {/* MOITIÉ INFÉRIEURE : GEMINI (Bas Gauche / Bas Droite) */}
+                {/* ==================================================== */}
+                <div className={`${demoStep === 'gemini' ? 'impact-step-layout' : 'hidden'} ${geminiPhase === 'finished' ? 'impact-step-ready' : ''} impact-demo-panel w-full`}>
+                  
+                  {/* BAS GAUCHE : UI GEMINI */}
+                  <div className="impact-step-main impact-search-surface bg-[#131314] relative flex flex-col">
+                    <div className="p-3 flex items-center gap-2 border-b border-[#2a2a35] bg-[#131314] sticky top-0 z-10">
+                      <span className="text-base text-[#e3e3e3] font-medium ml-2 flex items-center gap-2"><PlatformLogo platform={platformPair.ai} /> {platformPair.ai.name}</span>
+                    </div>
+
+                    {(geminiPhase === 'idle' || geminiPhase === 'typing') ? (
+                      <div className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+                        <div className="w-full text-center mb-5">
+                          <h2 className="text-[2.1rem] md:text-[2.45rem] leading-tight font-medium text-[#e3e3e3]">Bonjour</h2>
+                          <h1 className="text-[2.1rem] md:text-[2.45rem] leading-tight font-medium text-[#5f6368]">Par où commencer ?</h1>
+                        </div>
+                        <div 
+                          onClick={startSimulation}
+                          className="w-full max-w-[430px] bg-[#1e1e20] rounded-[22px] p-3.5 flex flex-col border border-[#2a2a35] shadow-lg cursor-text transition-colors hover:bg-[#252529]"
+                        >
+                          <div className="text-sm flex-1 flex items-start px-2 min-h-[36px]">
+                            {typedText ? (
+                              <span className="text-[#e3e3e3]">{typedText}<span className="w-[2px] h-6 bg-[#e3e3e3] inline-block ml-1 animate-pulse align-middle"></span></span>
+                            ) : (
+                              <span className={platformPair.ai.promptColor}>{platformPair.ai.placeholder}</span>
+                            )}
+                          </div>
+                          <div className="flex justify-between items-center pt-3 px-2 text-[#c4c7c5]">
+                            <div className="flex items-center gap-4">
+                              <Plus className="w-5 h-5 hover:text-white cursor-pointer" />
+                            </div>
+                            <Mic className="w-5 h-5 hover:text-white cursor-pointer" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col pt-4 px-5 pb-5">
+                        <div className="flex justify-end w-full mb-3">
+                          <div className="bg-[#2a2a35] text-[#e3e3e3] px-4 py-2.5 rounded-3xl max-w-[82%] text-xs shadow-sm font-medium">
+                            {QUERY_TEXT}
+                          </div>
+                        </div>
+
+                        <div className="w-full flex flex-col items-start max-w-[430px]">
+                          <div 
+                            className="flex items-center gap-2.5 cursor-pointer select-none mb-3 group bg-[#1e1e20] border border-[#2a2a35] px-3.5 py-1.5 rounded-full hover:bg-[#2a2a35] transition-colors"
+                            onClick={() => setShowReasoning(!showReasoning)}
+                          >
+                            <Activity className="w-4 h-4 text-[#8ab4f8]" />
+                            <span className="text-[#e3e3e3] text-xs font-medium">{showReasoning ? 'Masquer le calcul interne' : 'Afficher le calcul interne'}</span>
+                            {showReasoning ? <ChevronUp className="w-4 h-4 text-[#c4c7c5]" /> : <ChevronDown className="w-4 h-4 text-[#c4c7c5]" />}
+                          </div>
+
+                          {showReasoning && (geminiPhase === 'generating' || geminiPhase === 'finished') && (
+                            <div className="w-full bg-[#1e1e20] rounded-2xl p-3.5 mb-3 border border-[#2a2a35] animate-fade-in relative overflow-hidden shadow-inner">
+                              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-blue-500 to-purple-600"></div>
+                              <div className="flex items-center gap-2.5 text-blue-400 font-mono text-[11px] uppercase tracking-widest mb-3">
+                                <Activity className="w-4 h-4 animate-pulse" /> Calcul interne
+                              </div>
+                              <div className="text-[#c4c7c5] text-xs leading-relaxed flex flex-wrap gap-x-1.5 gap-y-2.5">
+                                {(geminiPhase === 'finished' ? tokens : visibleGeminiTokens).map((token, i) => (
+                                  <div key={i} className="relative group animate-fade-in">
+                                    <span className={`px-1.5 py-0.5 rounded ${i === activeTokenIndex ? 'bg-[#8ab4f8]/20 text-[#8ab4f8]' : 'text-[#e3e3e3]'}`}>
+                                      {token.compute}
+                                    </span>
+                                  </div>
+                                ))}
+                                {geminiPhase === 'generating' && <span className="w-2.5 h-4 mt-1.5 bg-[#8ab4f8] animate-pulse"></span>}
+                              </div>
+                            </div>
+                          )}
+
+                          {(geminiPhase === 'generating' || geminiPhase === 'finished') && (
+                            <div className="w-full bg-[#1e1e20] rounded-3xl p-4 animate-fade-in border border-[#2a2a35] shadow-lg mt-1">
+                               <div className="text-xs text-[#8ab4f8] mb-3 font-medium uppercase tracking-wider">{currentScenario.geminiTitle}</div>
+                               <div className="impact-justify text-[13px] text-[#e3e3e3] leading-relaxed font-light">
+                                 {geminiPhase === 'generating' ? (
+                                   <React.Fragment>
+                                     {generatedGeminiText || `${platformPair.ai.name} prépare sa réponse...`}
+                                     <span className="inline-block w-[2px] h-4 bg-[#a8c7fa] ml-1 align-middle animate-pulse"></span>
+                                   </React.Fragment>
+                                 ) : (
+                                   fullGeminiText
+                                 )}
+                               </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BAS DROITE : FEEDBACK GEMINI */}
+                  <div className={`impact-step-feedback min-h-full impact-ai-feedback-shell border-l border-red-950/70 relative overflow-hidden flex flex-col items-center justify-center p-5 ${geminiPhase === 'finished' ? 'impact-feedback-visible' : 'impact-feedback-hidden'}`}>
+                    <div className="relative z-10 w-full max-w-[320px] flex flex-col items-center">
+                      {geminiPhase === 'finished' && (
+                        <div className="impact-ai-feedback-card animate-fade-in">
+                          <div className="stagger-item relative flex items-start gap-3 mb-3" style={{ animationDelay: '.25s' }}>
+                            <div className="w-8 h-8 rounded-full bg-amber-500/10 border border-amber-400/25 flex items-center justify-center flex-shrink-0">
+                              <PlatformLogo platform={platformPair.ai} />
+                            </div>
+                            <div>
+                              <div className="text-amber-300 text-[10px] font-semibold uppercase tracking-[.16em] mb-1">Coût environnemental</div>
+                            </div>
+                          </div>
+
+                          <div className="relative grid gap-2">
+                            <div className="stagger-item impact-ai-metric" style={{ animationDelay: '1.05s' }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2 text-blue-300 text-[11px] font-semibold uppercase tracking-wider">
+                                  <Droplets className="w-4 h-4" /> Eau utilisée
+                                </div>
+                                <div className="text-white font-mono text-xs font-semibold">{guilt.water.toFixed(1)} cl</div>
+                              </div>
+                              <div className="impact-ai-meter text-blue-400">
+                                <span className="bg-blue-400" style={{ width: `${Math.min(100, guilt.water * 3.7)}%` }}></span>
+                              </div>
+                            </div>
+
+                            <div className="stagger-item impact-ai-metric" style={{ animationDelay: '1.85s' }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2 text-orange-300 text-[11px] font-semibold uppercase tracking-wider">
+                                  <Zap className="w-4 h-4" /> Énergie
+                                </div>
+                                <div className="text-white font-mono text-xs font-semibold">{guilt.energy.toFixed(1)} Wh</div>
+                              </div>
+                              <div className="impact-ai-meter text-orange-400">
+                                <span className="bg-orange-400" style={{ width: `${Math.min(100, guilt.energy * 6.8)}%` }}></span>
+                              </div>
+                            </div>
+
+                            <div className="stagger-item impact-ai-metric" style={{ animationDelay: '2.65s' }}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2 text-red-300 text-[11px] font-semibold uppercase tracking-wider">
+                                  <Flame className="w-4 h-4" /> CO2 estimé
+                                </div>
+                                <div className="text-white font-mono text-xs font-semibold">{guilt.co2.toFixed(1)} g</div>
+                              </div>
+                              <div className="impact-ai-meter text-red-400">
+                                <span className="bg-red-400" style={{ width: `${Math.min(100, guilt.co2 * 10)}%` }}></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="stagger-item impact-ai-alert mt-3" style={{ animationDelay: '3.45s' }}>
+                            <AlertTriangle className="w-4 h-4 text-amber-300 flex-shrink-0" />
+                            <span className="impact-justify">Utilisez l'IA quand elle apporte plus qu'une recherche rapide.</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              
+                <div className="impact-action-row">
+                  {globalPhase === 'done' && demoStep !== 'summary' && (
+                    <button 
+                      onClick={demoStep === 'google' ? goToGeminiStep : goToSummaryStep} 
+                      className={`impact-replay-btn ${demoStep === 'google' ? 'impact-replay-web' : 'impact-replay-compare'}`}
+                      aria-label={demoStep === 'google' ? `Voir ${platformPair.ai.name}` : 'Comparer'}
+                      title={demoStep === 'google' ? `Voir ${platformPair.ai.name}` : 'Comparer'}
+                    >
+                      {demoStep === 'google' ? 'Recherche IA' : 'Comparer'}
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
