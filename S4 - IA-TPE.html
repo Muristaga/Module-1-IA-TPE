@@ -1,0 +1,2458 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic 360° IA - CréActifs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Activation du mode sombre via la classe 'dark'
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* Thème Clair (Défaut) */
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            background-image: radial-gradient(circle at top right, rgba(139, 92, 246, 0.08), transparent 400px),
+                              radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.08), transparent 400px);
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Thème Sombre */
+        .dark body {
+            background-color: #0b0f19; 
+            color: #e2e8f0; 
+            background-image: radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 400px),
+                              radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.15), transparent 400px);
+        }
+
+        /* Contraste accentué des cadres (Quadres) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(100, 116, 139, 0.3); /* Bordure bien visible en mode clair */
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(139, 92, 246, 0.4); /* Contraste adapté au mode sombre */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Step transitions */
+        .step-section { display: none; opacity: 0; transition: opacity 0.4s ease-in-out; }
+        .step-section.active { display: block; opacity: 1; animation: fadeInUp 0.5s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Custom inputs */
+        .cyber-input {
+            background: #ffffff; border: 1px solid rgba(148, 163, 184, 0.8); color: #0f172a;
+            transition: all 0.2s;
+        }
+        .dark .cyber-input {
+            background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(100, 116, 139, 0.8); color: #f8fafc;
+        }
+        .cyber-input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2); outline: none; }
+        
+        /* Interactive Gauges Style */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+
+        /* Custom Range Fill */
+        .range-fill {
+            width: 100%; height: 4px; cursor: pointer; 
+            border-radius: 999px; 
+            border: 1px solid rgba(148, 163, 184, 0.8);
+            background: rgba(226, 232, 240, 0.9);
+            position: relative;
+        }
+        .dark .range-fill {
+            border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        input[type=range]::-webkit-slider-thumb { 
+            border: 2px solid #ffffff; 
+            height: 20px; width: 20px; 
+            border-radius: 50%; 
+            background: #0e7490; 
+            cursor: pointer; 
+            -webkit-appearance: none; 
+            margin-top: -8px; 
+            box-shadow: 0 2px 8px rgba(14,116,144,0.35);
+            transition: transform 0.1s ease, background 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+        .dark input[type=range]::-webkit-slider-thumb {
+            background: #0e7490;
+            box-shadow: 0 2px 10px rgba(14,116,144,0.35);
+            border-color: #e2e8f0;
+        }
+        input[type=range]::-moz-range-thumb {
+            border: 2px solid #ffffff;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0e7490;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(14,116,144,0.35);
+        }
+        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.16); }
+
+        /* Custom Checkbox */
+        .cyber-checkbox { appearance: none; width: 1.2rem; height: 1.2rem; border: 1px solid #94a3b8; border-radius: 0.25rem; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .dark .cyber-checkbox { border-color: #64748b; background: rgba(15,23,42,0.8); }
+        .cyber-checkbox:checked { background: #8b5cf6; border-color: #8b5cf6; }
+        .cyber-checkbox:checked::after { content: '+'; color: white; font-size: 1rem; font-weight: bold; line-height: 1; }
+
+        .cyber-checkbox.plus-icon::before { content: '+'; color: #8b5cf6; font-size: 1.1rem; font-weight: bold; line-height: 1; }
+        .cyber-checkbox.plus-icon:checked::before { display: none; }
+
+        @keyframes customPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        .animate-custom-pulse { animation: none !important; }
+
+        /* Tooltip behavior for task evaluation labels */
+        .label-tooltip-trigger { position: relative; cursor: help; min-width: 0; }
+        .label-tooltip-trigger:hover .eval-tooltip { display: block !important; opacity: 1; transform: translateY(0); }
+        .eval-tooltip { pointer-events: none; opacity: 0; display: none; transform: translateY(5px); transition: all 0.2s ease; background: white; color: #334155; border: 1px solid #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15); }
+        .dark .eval-tooltip { background: #1e293b; color: #e2e8f0; border: 1px solid rgba(139,92,246,0.5); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); }
+        @keyframes infoNotify {
+            0%, 100% { transform: translateY(0) scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.34); }
+            50% { transform: translateY(-1px) scale(1.08); box-shadow: 0 0 0 7px rgba(245, 158, 11, 0); }
+        }
+        .intro-info-dot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.45em;
+            height: 1.45em;
+            border-radius: 999px;
+            line-height: 1;
+        }
+        .intro-info-dot.notify-active {
+            background: rgba(245, 158, 11, 0.14);
+            animation: infoNotify 1.4s ease-in-out infinite;
+        }
+        
+        .chart-container { position: relative; width: 100%; height: 420px; }
+
+        /* Design Santeum appliqué uniquement à l'étape Scanner opérationnel */
+        #step-3 { color: #0f172a; }
+        #step-3 .glass-panel {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+            border-radius: 8px !important;
+            color: #0f172a !important;
+        }
+        #task-input-section,
+        #scanner-main-layout,
+        #scanner-nav {
+            max-width: 48rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        #scanner-main-layout {
+            flex-direction: column !important;
+            gap: 24px !important;
+        }
+        #evaluation-panel,
+        #plan-action-container {
+            width: 100% !important;
+            max-width: none !important;
+        }
+        #plan-action-container {
+            transform: none !important;
+        }
+        #plan-action-container > .glass-panel {
+            position: static !important;
+        }
+        #evaluation-panel,
+        #plan-action-container > .glass-panel {
+            border-top: 1px solid #e5e7eb !important;
+        }
+        #task-input-section > .glass-panel {
+            border-top: 4px solid #f59e0b !important;
+        }
+        #step-3 h3 {
+            color: #0f172a !important;
+            font-weight: 700 !important;
+        }
+        #step-3 p,
+        #step-3 label,
+        #step-3 .label-tooltip-trigger label {
+            color: #64748b !important;
+        }
+        #custom-task-wrapper {
+            gap: 8px !important;
+        }
+        #taskInput {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            color: #0f172a !important;
+            box-shadow: none !important;
+        }
+        #taskInput:focus {
+            border-color: #2d6bcf !important;
+            box-shadow: 0 0 0 3px rgba(45, 107, 207, 0.12) !important;
+        }
+        #custom-task-wrapper button {
+            background: #f59e0b !important;
+            border-radius: 8px !important;
+            font-weight: 700 !important;
+            box-shadow: none !important;
+        }
+        #custom-task-wrapper button:hover {
+            background: #d97706 !important;
+        }
+        #task-suggestions-container {
+            gap: 0 !important;
+            margin-bottom: 20px !important;
+        }
+        #task-suggestions-container .task-sugg-btn {
+            display: inline-block !important;
+            min-height: auto !important;
+            margin: 4px !important;
+            padding: 8px 16px !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+        }
+        #task-suggestions-container .task-sugg-btn:hover {
+            border-color: #2d6bcf !important;
+            background: #eef4ff !important;
+        }
+        #task-suggestions-container .task-sugg-btn:disabled,
+        #task-suggestions-container .task-sugg-btn.is-selected {
+            border-color: #d1d5db !important;
+            background: #f1f5f9 !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
+        }
+        #task-suggestions-container .task-sugg-btn:disabled:hover,
+        #task-suggestions-container .task-sugg-btn.is-selected:hover {
+            border-color: #d1d5db !important;
+            background: #f1f5f9 !important;
+        }
+        #task-count-warning:not(.hidden) {
+            background: #fff8df !important;
+            border: 1px solid #e6a817 !important;
+            color: #77540a !important;
+            border-radius: 8px !important;
+            padding: 12px 16px !important;
+            font-size: 13px !important;
+            margin-bottom: 16px !important;
+        }
+        #tasksList > div {
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-left: 4px solid #0e7490 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            padding: 12px 20px !important;
+            margin-bottom: 8px !important;
+        }
+        #tasksList > div > div:first-child {
+            margin-bottom: 8px !important;
+        }
+        #tasksList h3 {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+        }
+        #tasksList button {
+            font-size: 12px !important;
+            color: #64748b !important;
+        }
+        #tasksList button:hover {
+            color: #dc2626 !important;
+        }
+        #tasksList .space-y-6 {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+        #tasksList .task-eval-row {
+            display: flex !important;
+            grid-template-columns: none !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-height: 28px !important;
+        }
+        #tasksList .label-tooltip-trigger {
+            width: 150px !important;
+            flex: 0 0 150px !important;
+        }
+        #tasksList .eval-text-time,
+        #tasksList .eval-text-value {
+            color: #64748b !important;
+            border-bottom: none !important;
+            text-decoration: none !important;
+            animation: none !important;
+        }
+        #tasksList .eval-icon {
+            color: #d97706 !important;
+            border-bottom: none !important;
+            text-decoration: none !important;
+            animation: none !important;
+        }
+        .dark #tasksList .eval-text-time,
+        .dark #tasksList .eval-text-value {
+            color: #94a3b8 !important;
+        }
+        .dark #tasksList .eval-icon {
+            color: #f59e0b !important;
+        }
+        #tasksList .task-eval-row input[type="range"] {
+            flex: 1 1 auto !important;
+            accent-color: #0e7490 !important;
+        }
+        #tasksList .task-eval-row > span {
+            width: 28px !important;
+            text-align: center !important;
+            font-size: 13px !important;
+            color: #0f172a !important;
+        }
+        #evaluation-panel h3,
+        #plan-action-container h3 {
+            border-bottom: 1px solid #cbd5e1 !important;
+            padding-bottom: 12px !important;
+        }
+        #plan-action-container .chart-container {
+            height: 300px !important;
+            background: #ffffff !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            padding: 20px !important;
+            overflow: hidden !important;
+        }
+        #plan-action-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .matrix-task-legend {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+            text-align: left;
+        }
+        .matrix-task-legend-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            text-align: left;
+            width: 100%;
+        }
+        .matrix-task-legend-list {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+        }
+        .matrix-task-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.2;
+            padding: 6px 10px;
+            break-inside: avoid;
+            text-align: left;
+            margin-right: auto;
+        }
+        .matrix-task-legend-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        .matrix-task-solution-label {
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .matrix-task-reco {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .matrix-task-reco-automate { background: #fef3c7; color: #92400e; }
+        .matrix-task-reco-assist { background: #dbeafe; color: #1d4ed8; }
+        .matrix-task-reco-hybrid { background: #ede9fe; color: #5b21b6; }
+        .matrix-task-reco-valorize { background: #ecfeff; color: #0e7490; }
+        .matrix-task-reco-ignore { background: #f1f5f9; color: #475569; }
+        .matrix-task-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            flex: 0 0 10px;
+            box-shadow: 0 0 0 2px #ffffff;
+        }
+        #scanner-nav button[onclick="generateDashboard()"] {
+            background: #2d6bcf !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+        }
+        #scanner-nav button[onclick="generateDashboard()"]:hover {
+            background: #245ab0 !important;
+        }
+        #dashboard-matrix-section {
+            display: none !important;
+        }
+        #dash-table-container table {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+        }
+        #dash-table-container thead th {
+            border: 2px solid #ffffff !important;
+            border-radius: 1px !important;
+        }
+
+        @media (max-width: 520px) {
+            .task-eval-row { grid-template-columns: minmax(0, 1fr) 36px; }
+            .task-eval-row .label-tooltip-trigger { grid-column: 1 / -1; }
+            #tasksList .task-eval-row { display: grid !important; grid-template-columns: minmax(0, 1fr) 36px !important; }
+            #tasksList .label-tooltip-trigger { width: auto !important; flex: none !important; grid-column: 1 / -1 !important; }
+        }
+
+        @media print {
+            @page { margin: 12mm; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
+            main { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .step-section { display: none !important; }
+            #step-4 { display: block !important; opacity: 1 !important; animation: none !important; }
+            #step-4 > .max-w-4xl { max-width: 100% !important; margin: 0 !important; }
+            .glass-panel { background: white !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; color: black !important; }
+            #diagnostic-report { border: none !important; box-shadow: none !important; padding: 24px !important; }
+            #diagnostic-report table { page-break-inside: auto; }
+            #diagnostic-report tr { page-break-inside: avoid; page-break-after: auto; }
+            #dashboard-matrix-section { display: block !important; page-break-inside: avoid; }
+            #print-chart-img {
+                page-break-inside: avoid;
+                filter: none !important;
+                -webkit-filter: none !important;
+                opacity: 1 !important;
+                mix-blend-mode: normal !important;
+            }
+        }
+    </style>
+</head>
+<!-- Absence de la classe "dark" pour forcer le Light Mode par défaut -->
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- HEADER -->
+    <header class="glass-panel border-b-0 border-b border-slate-300 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-20 no-print shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-violet-500/20 text-sm">C1</div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-wide">Diagnostic de Maturité IA</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">Certification CréActifs - Phase 1</p>
+            </div>
+        </div>
+        
+        <!-- Controls (Progress Bar + Theme Toggle) -->
+        <div class="flex items-center gap-6">
+            <!-- Progress Bar -->
+            <div class="flex items-center gap-2 hidden md:flex">
+                <div class="step-indicator w-12 h-1 rounded bg-violet-600 shadow-[0_0_8px_rgba(139,92,246,0.8)]" id="ind-1"></div>
+                <div class="step-indicator w-12 h-1 rounded bg-slate-300 dark:bg-slate-700 transition-colors" id="ind-2"></div>
+                <div class="step-indicator w-12 h-1 rounded bg-slate-300 dark:bg-slate-700 transition-colors" id="ind-3"></div>
+                <div class="step-indicator w-12 h-1 rounded bg-slate-300 dark:bg-slate-700 transition-colors" id="ind-4"></div>
+            </div>
+
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-300 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-400 transition-all shadow-sm" title="Basculer le thème">
+                <!-- Soleil (affiché en mode sombre pour repasser en clair) -->
+                <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Lune (affichée en mode clair pour passer en sombre) -->
+                <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 relative">
+        <div class="max-w-6xl mx-auto transition-all duration-500" id="main-container">
+
+            <!-- STEP 1: SECTEUR & PASSIF -->
+            <section id="step-1" class="step-section active">
+                <div class="text-center mb-10">
+                    <span class="text-violet-600 dark:text-violet-400 text-sm font-bold uppercase tracking-[0.2em] mb-2 block">Étape 1 sur 4</span>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-3">Vision & Culture d'Entreprise</h2>
+                    <p class="text-slate-600 dark:text-slate-300 text-base max-w-2xl mx-auto">Avant de parler technologie, parlons de vous et de votre TPE.</p>
+                </div>
+
+                <!-- Secteur d'Activité -->
+                <div class="glass-panel rounded-xl p-8 border-t-4 border-t-emerald-500 mb-8 max-w-3xl mx-auto">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Secteur d'Activité</h3>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Quel est votre cœur de métier ?</label>
+                    <div class="flex flex-col gap-3">
+                        <select id="activity-select" class="w-full cyber-input px-4 py-3 rounded-lg text-sm" onchange="toggleCustomActivity()">
+                            <option value="" disabled selected>Sélectionnez votre activité...</option>
+                            <option value="Commerce de détail / E-commerce">Commerce de détail / E-commerce</option>
+                            <option value="Services aux entreprises (B2B)">Services aux entreprises (B2B)</option>
+                            <option value="Services aux particuliers (B2C)">Services aux particuliers (B2C)</option>
+                            <option value="Artisanat / BTP">Artisanat / BTP</option>
+                            <option value="Santé / Bien-être">Santé / Bien-être</option>
+                            <option value="Restauration / Hôtellerie">Restauration / Hôtellerie</option>
+                            <option value="Formation / Éducation">Formation / Éducation</option>
+                            <option value="Autre">Autre (Préciser)</option>
+                        </select>
+                        <div id="custom-activity-wrapper" class="hidden relative w-full">
+                            <input type="text" id="activity-custom" placeholder="Saisissez votre activité..." class="w-full cyber-input px-4 py-3 pr-24 rounded-lg text-sm">
+                            <button onclick="resetActivity()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold uppercase tracking-widest transition-colors bg-slate-200/80 dark:bg-slate-800/80 px-2 py-1 rounded">Retirer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Passif & Frustrations -->
+                <div class="glass-panel rounded-xl p-8 border-t-4 border-t-rose-500 mb-8 max-w-3xl mx-auto">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Votre Passif & Vos Frustrations</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Commençons par faire le point sur votre situation actuelle.</p>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Quel est votre niveau de pratique avec l'IA aujourd'hui ?</label>
+                        <select id="ia-level" class="w-full cyber-input px-4 py-3 rounded-lg text-sm">
+                            <option value="" disabled selected>Sélectionnez votre niveau...</option>
+                            <option value="Novice">Novice (je n'ai jamais vraiment utilisé)</option>
+                            <option value="Curieux">Curieux (j'ai testé ChatGPT quelque fois)</option>
+                            <option value="Utilisateur">Utilisateur (je m'en sers régulièrement)</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-8">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Quelles sont vos plus grandes frustrations au quotidien ?</label>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">(Plusieurs choix possibles)</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="frustrations-grid">
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Manque de temps libre" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Manque de temps libre</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="La charge mentale écrasante" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">La charge mentale écrasante</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Le syndrome de la page blanche" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Le syndrome de la page blanche</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="L'administratif sans valeur ajoutée" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">L'administratif sans valeur ajoutée</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Trop d'urgences à gérer" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Trop d'urgences à gérer</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Données éparpillées" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Données éparpillées</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Relances clients oubliées" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Relances clients oubliées</span></label>
+                            <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="cyber-checkbox frustration-cb predefined-frustration" value="Manque de visibilité" onchange="checkFrustrationReveal()"> <span class="text-sm text-slate-700 dark:text-slate-300">Manque de visibilité</span></label>
+                            <label class="hidden items-center gap-3 cursor-pointer" id="label-frustration-other"><input type="checkbox" id="frustration-other-cb" class="cyber-checkbox plus-icon" onchange="toggleCustomFrustration()"> <span class="text-sm text-slate-700 dark:text-slate-300">Autre</span></label>
+                        </div>
+                        <div id="custom-frustration-wrapper" class="hidden relative w-full mt-4">
+                            <input type="text" id="frustration-custom" placeholder="Saisissez votre frustration et appuyez sur Entrée..." class="w-full cyber-input px-4 py-3 pr-24 rounded-lg text-sm" onkeypress="handleCustomFrustrationKeypress(event, this)">
+                            <button type="button" onclick="resetFrustration()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold uppercase tracking-widest transition-colors bg-slate-200/80 dark:bg-slate-800/80 px-2 py-1 rounded">Annuler</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Quel est votre principal frein psychologique face à l’IA ?</label>
+                        <select id="freins-select" class="w-full cyber-input px-4 py-3 rounded-lg text-sm" onchange="toggleCustomFrein()">
+                            <option value="" disabled selected>Sélectionnez votre frein principal...</option>
+                            <option value="Peur du remplacement">Peur du remplacement</option>
+                            <option value="Manque de temps pour se former">Manque de temps pour se former</option>
+                            <option value="Peur de la complexité technique">Peur de la complexité technique</option>
+                            <option value="Aucun frein majeur identifié">Aucun frein majeur identifié</option>
+                            <option value="Autre">Autre (Préciser)</option>
+                        </select>
+                        <div id="custom-frein-wrapper" class="hidden relative w-full mt-3">
+                            <input type="text" id="frein-custom" placeholder="Saisissez votre frein..." class="w-full cyber-input px-4 py-3 pr-24 rounded-lg text-sm">
+                            <button onclick="resetFrein()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold uppercase tracking-widest transition-colors bg-slate-200/80 dark:bg-slate-800/80 px-2 py-1 rounded">Retirer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Objectifs Stratégiques -->
+                <div class="glass-panel rounded-xl p-8 border-t-4 border-t-violet-500 mb-8 max-w-3xl mx-auto">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Objectifs Stratégiques</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">Pour vous, réussir avec l'IA dans 12 mois, c'est :</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="vision-grid">
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Récupérer le temps" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Récupérer mon Temps</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Liberer 20% de temps pour l'innovation et la strategie</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Booster la Rentabilité" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Booster la Rentabilité</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Croître le chiffre d'affaires sans devoir recruter immediatement</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Monter en Qualité" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Monter en Qualité</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Ameliorer l'experience et la reactivite client</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Travailler Sereinement" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Travailler Sereinement</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Reduire la charge mentale et les heures supplementaires</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Mieux piloter l'activité" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Mieux piloter l'activité</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Suivre les bons indicateurs pour décider plus vite</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Convertir plus de prospects" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Convertir plus de prospects</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Relancer au bon moment et signer plus facilement</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Fluidifier l'administratif" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Fluidifier l'administratif</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Automatiser les tâches répétitives sans alourdir l'équipe</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" class="cyber-checkbox vision-cb predefined-vision mt-1 shrink-0" value="Innover dans mon offre" onchange="checkVisionReveal()">
+                            <div class="flex flex-col">
+                                <strong class="text-sm text-slate-900 dark:text-white block mb-1">Innover dans mon offre</strong>
+                                <span class="text-xs text-slate-600 dark:text-slate-400 font-normal">Tester de nouvelles idées de services avec l'IA</span>
+                            </div>
+                        </label>
+                        <label id="label-vision-other" class="hidden items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all">
+                            <input type="checkbox" id="vision-other-cb" class="cyber-checkbox plus-icon shrink-0" onchange="toggleCustomVision()">
+                            <strong class="text-sm text-slate-700 dark:text-slate-300">Autre</strong>
+                        </label>
+                    </div>
+                    <div id="custom-vision-wrapper" class="hidden relative w-full mt-4">
+                        <input type="text" id="vision-custom" placeholder="Saisissez votre objectif et appuyez sur Entrée..." class="w-full cyber-input px-4 py-3 pr-24 rounded-lg text-sm" onkeypress="handleCustomVisionKeypress(event, this)">
+                        <button type="button" onclick="resetVision()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold uppercase tracking-widest transition-colors bg-slate-200/80 dark:bg-slate-800/80 px-2 py-1 rounded">Annuler</button>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-end border-t border-slate-300 dark:border-slate-800 pt-6 max-w-3xl mx-auto">
+                    <button onclick="nextStep(2)" class="bg-violet-600 hover:bg-violet-500 text-white font-semibold py-3 px-10 rounded-lg transition-all uppercase tracking-wider text-sm shadow-md">Suivant</button>
+                </div>
+            </section>
+
+            <!-- STEP 2: DATA & ECOSYSTÈME -->
+            <section id="step-2" class="step-section">
+                <div class="text-center mb-10">
+                    <span class="text-blue-600 dark:text-blue-400 text-sm font-bold uppercase tracking-[0.2em] mb-2 block">Étape 2 sur 4</span>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-3">Écosystème & Données</h2>
+                    <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">L’IA fonctionne mieux avec des données fiables et bien organisées. Faisons le point sur vos outils actuels.</p>
+                </div>
+
+                <div class="glass-panel rounded-xl p-8 max-w-3xl mx-auto border-t-4 border-t-blue-500 mb-8">
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4 border-b border-slate-300 dark:border-slate-700 pb-3">Quels outils utilisez-vous actuellement ?</h3>
+                            <div class="grid grid-cols-1 gap-3" id="tools-grid">
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="CRM structure"> <span class="text-sm text-slate-700 dark:text-slate-300">CRM structure</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="Logiciel de facturation"> <span class="text-sm text-slate-700 dark:text-slate-300">Logiciel de facturation</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="Google Drive / Cloud"> <span class="text-sm text-slate-700 dark:text-slate-300">Google Drive / Cloud</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="Fichiers Excel"> <span class="text-sm text-slate-700 dark:text-slate-300">Fichiers Excel</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="Messagerie (Slack, Teams...)"> <span class="text-sm text-slate-700 dark:text-slate-300">Messagerie (Slack, Teams...)</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"><input type="checkbox" class="cyber-checkbox data-tool" value="Reseaux sociaux"> <span class="text-sm text-slate-700 dark:text-slate-300">Reseaux sociaux</span></label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" id="label-tool-other"><input type="checkbox" id="tool-other-cb" class="cyber-checkbox plus-icon" onchange="toggleCustomTool()"> <span class="text-sm text-slate-700 dark:text-slate-300">Autre</span></label>
+                            </div>
+                            <div id="custom-tool-wrapper" class="hidden relative w-full mt-4">
+                                <input type="text" id="tool-custom" placeholder="Saisissez votre outil et appuyez sur Entrée..." class="w-full cyber-input px-4 py-3 pr-24 rounded-lg text-sm" onkeypress="handleCustomToolKeypress(event, this)">
+                                <button type="button" onclick="resetTool()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 font-bold uppercase tracking-widest transition-colors bg-slate-200/80 dark:bg-slate-800/80 px-2 py-1 rounded">Annuler</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4 border-b border-slate-300 dark:border-slate-700 pb-3">Comment évaluez-vous la qualité de vos données clients ?</h3>
+                            <select id="dataQuality" class="w-full cyber-input px-4 py-3 rounded-lg text-sm">
+                                <option value="" disabled selected>Sélectionnez votre réponse...</option>
+                                <option value="centralisees">Centralisees, propres et a jour</option>
+                                <option value="en_silos">En silos (dans differents logiciels non connectes)</option>
+                                <option value="eparpillees">Eparpillees et obsoletes</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-xl p-8 max-w-3xl mx-auto border-t-4 border-t-rose-500">
+                    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Vigilance RGPD</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <p class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Traitez-vous des donnees sensibles (sante, bancaires) ?</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                                    <input type="radio" name="rgpd-sensible" class="w-5 h-5 accent-blue-600 shrink-0" value="oui" checked>
+                                    <span class="text-sm font-semibold text-slate-900 dark:text-white">Oui, donnees sensibles</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                                    <input type="radio" name="rgpd-sensible" class="w-5 h-5 accent-blue-600 shrink-0" value="non">
+                                    <span class="text-sm text-slate-900 dark:text-white">Non, donnees classiques</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Maîtrise du stockage et des accès ?</label>
+                            <select id="rgpd-maitrise" class="w-full cyber-input px-4 py-3 rounded-lg text-sm">
+                                <option value="" disabled selected>Sélectionnez...</option>
+                                <option value="total">Oui, tout est encadré</option>
+                                <option value="partiel">En partie seulement</option>
+                                <option value="aucune">Non, manque de visibilité</option>
+                                <option value="encours">Cartographie en cours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between items-center max-w-3xl mx-auto border-t border-slate-300 dark:border-slate-800 pt-6">
+                    <button onclick="nextStep(1)" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-4 py-2 transition-colors uppercase tracking-widest text-xs font-bold">Retour</button>
+                    <button onclick="nextStep(3)" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-10 rounded-lg transition-all uppercase tracking-wider text-sm shadow-md">Suivant</button>
+                </div>
+            </section>
+
+            <!-- STEP 3: SCANNER OPÉRATIONNEL -->
+            <section id="step-3" class="step-section">
+                <div class="text-center mb-10">
+                    <span class="text-amber-600 dark:text-amber-400 text-sm font-bold uppercase tracking-[0.2em] mb-2 block">Étape 3 sur 4</span>
+                    <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-3">Scanner Opérationnel</h2>
+                </div>
+
+                <!-- ADD TASK PANEL -->
+                <div class="max-w-3xl mx-auto mb-8 transition-all duration-500" id="task-input-section">
+                    <div class="glass-panel rounded-xl p-8 border-t-4 border-t-amber-500">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">1- Identifier les tâches</h3>
+                        <div class="mb-6">
+                            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                Identifiez vos taches chronophages. Evaluez 3 a 8 taches en les notant sur 2 axes :
+                                <span class="label-tooltip-trigger intro-help-trigger inline-flex items-center gap-1 font-semibold text-cyan-700 dark:text-cyan-300">
+                                    <span>temps perdu</span>
+                                    <span class="intro-info-dot notify-active">(i)</span>
+                                    <span class="eval-tooltip absolute top-full left-0 mt-2 w-[min(320px,calc(100vw-4rem))] text-[10px] p-3 rounded-lg z-50 leading-relaxed font-normal">
+                                        <strong class="block mb-1 text-cyan-700 dark:text-cyan-300">Est-ce que cette t&acirc;che consomme beaucoup de temps ?</strong>
+                                        <span class="block">Eleve : elle est frequente, longue ou bloque votre activite.</span>
+                                        <span class="block mt-1">Faible : elle est rapide, rare ou facilement absorbee.</span>
+                                    </span>
+                                </span>
+                                et
+                                <span class="label-tooltip-trigger intro-help-trigger inline-flex items-center gap-1 font-semibold" style="color:#b87c14">
+                                    <span>valeur strategique</span>
+                                    <span class="intro-info-dot notify-active">(i)</span>
+                                    <span class="eval-tooltip absolute top-full left-0 mt-2 w-[min(420px,calc(100vw-4rem))] text-[10px] p-3 rounded-lg z-50 leading-relaxed font-normal">
+                                        <strong class="block mb-1" style="color:#b87c14">Est-ce que cette t&acirc;che a un impact important sur l'activit&eacute; ?</strong>
+                                        <span class="block whitespace-nowrap">&Eacute;lev&eacute;e : la tache influence vos clients, revenus, qualite ou delais.</span>
+                                        <span class="block mt-1 whitespace-nowrap">Faible : elle a peu d'effet sur ces resultats.</span>
+                                    </span>
+                                </span>.
+                            </p>
+                        </div>
+                        
+                        <div id="task-count-warning" class="hidden transition-all duration-300"></div>
+                        
+                        <div id="custom-task-wrapper" class="flex flex-col sm:flex-row gap-3 w-full mb-6">
+                            <input type="text" id="taskInput" placeholder="Saisissez une tache (ex : Rediger les devis)..." class="flex-1 cyber-input px-4 py-3 rounded-lg text-sm" onkeypress="handleCustomTaskKeypress(event, this)">
+                            <button type="button" onclick="addCustomTaskFromInput()" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-6 py-3 rounded-lg transition-colors text-sm">Ajouter</button>
+                        </div>
+
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Suggestions rapides (cliquez pour ajouter) :</p>
+                        <div class="flex flex-wrap justify-center gap-3" id="task-suggestions-container"></div>
+                    </div>
+                </div>
+
+                <!-- DYNAMIC LAYOUT -->
+                <div id="scanner-main-layout" class="flex flex-col gap-8 items-start opacity-0 hidden transition-all duration-700">
+                    
+                    <!-- COLUMN 1: EVALUATION -->
+                    <div id="evaluation-panel" class="w-full lg:w-full glass-panel rounded-xl p-6 border-t-4 border-t-cyan-500 transition-all duration-500">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6 border-b border-slate-300 dark:border-slate-700 pb-3">2 - J'évalue mes tâches</h3>
+                        <div id="tasksList" class="space-y-8"></div>
+                    </div>
+
+                    <!-- COLUMN 2: PLAN D'ACTION (REAL TIME) -->
+                    <div id="plan-action-container" class="w-full flex flex-col gap-6 hidden transition-all duration-500 scale-95">
+                        <div class="glass-panel rounded-xl p-6 border border-slate-200 dark:border-slate-700 sticky top-8">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Matrice d'action</h3>
+                            <div class="chart-container bg-white dark:bg-slate-950 rounded-lg overflow-hidden">
+                                <canvas id="matrixChart"></canvas>
+                            </div>
+                            <div id="matrix-task-legend" class="matrix-task-legend mt-4 hidden"></div>
+                            
+                            <!-- Legend / Interpretation -->
+                            <div id="interpretation-hint" class="hidden mt-6 text-center">
+                                <button onclick="toggleMatrixLegend()" class="w-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/50 py-3 rounded-lg text-sm font-bold hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-all">
+                                    💡 Voir mon analyse stratégique
+                                </button>
+                            </div>
+
+                            <div id="matrix-legend" class="hidden mt-4 animate-[fadeInUp_0.5s_ease-out]">
+                                <div class="bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg p-6 relative shadow-inner">
+                                    <button onclick="hideMatrixLegend()" class="absolute top-2 right-2 text-slate-500 hover:text-slate-900 dark:hover:text-white font-bold text-xs uppercase tracking-widest">Fermer</button>
+                                    <div id="dynamic-interpretation-content" class="text-sm text-slate-800 dark:text-slate-300"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex justify-between items-center border-t border-slate-300 dark:border-slate-800 pt-8 max-w-3xl mx-auto transition-all" id="scanner-nav">
+                    <button onclick="nextStep(2)" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-4 py-2 transition-colors uppercase tracking-widest text-xs font-bold">Retour</button>
+                    <button onclick="generateDashboard()" class="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 border border-emerald-500/30 text-white font-bold py-3 px-10 rounded-lg transition-all uppercase tracking-wider text-sm shadow-lg">
+                        Générer le Bilan Final
+                    </button>
+                </div>
+            </section>
+
+            <!-- STEP 4: DASHBOARD -->
+            <section id="step-4" class="step-section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-5">Votre bilan de maturité IA est prêt</h2>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 max-w-3xl mb-5">Avant de télécharger votre bilan, vérifiez que les 4 étapes du diagnostic sont bien complétées. Vous pourrez ensuite le présenter lors de la journée présentielle.</p>
+                        <div class="grid grid-cols-4 gap-1.5 max-w-3xl no-print">
+                            <div class="h-1 rounded bg-blue-600"></div>
+                            <div class="h-1 rounded bg-blue-600"></div>
+                            <div class="h-1 rounded bg-blue-600"></div>
+                            <div class="h-1 rounded bg-blue-600"></div>
+                        </div>
+                    </div>
+
+                    <div id="diagnostic-report" class="bg-white dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Votre bilan diagnostic IA</h2>
+                            <button onclick="prepareAndPrint()" class="no-print bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg transition-colors text-sm shadow-sm">Telecharger en PDF</button>
+                        </div>
+                        <div id="diagnostic-summary-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"></div>
+                        <div id="leader-profile-section" class="mb-8"></div>
+                        <div id="dash-table-container"></div>
+                        <div id="dashboard-matrix-section" class="mt-8">
+                            <h3 class="text-xl font-bold text-slate-950 dark:text-white mb-5">Matrice d'action</h3>
+                            <div class="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                                <img id="print-chart-img" src="" alt="Matrice d'action" style="display:block;width:100%;max-width:620px;margin:0 auto;">
+                                <div id="print-matrix-task-legend" class="matrix-task-legend mt-4 hidden"></div>
+                            </div>
+                            <div class="mt-5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-5">
+                                <h4 class="text-base font-bold text-slate-950 dark:text-white mb-3">Analyse de la matrice</h4>
+                                <div id="dashboard-matrix-analysis" class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="diagnostic-challenge" class="mt-6 bg-amber-100 border-l-4 border-amber-500 rounded-lg p-5 text-slate-900">
+                        <p class="text-base leading-relaxed"><strong>Votre defi intersession :</strong> Completez ce diagnostic avec au minimum 8 taches. Vous le presenterez lors de la journee presentiel - c'est la base de votre projet certifiant.</p>
+                    </div>
+                    <div class="mt-6 no-print">
+                        <button type="button" onclick="editDiagnostic()" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-4 rounded-lg transition-colors shadow-sm shadow-blue-600/20">
+                            <span aria-hidden="true">&larr;</span>
+                            <span>Modifier le diagnostic</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        let tasks = [];
+        let chart = null;
+        let layoutRevealed = false;
+        let firstTaskId = null;
+        let dashboardReady = false;
+        let dashboardRefreshTimer = null;
+        let dashboardRefreshInProgress = false;
+
+        const LOGIC = {
+            automate: { color: '#f59e0b', text: 'Automatiser', tools: 'Make, Zapier, n8n + ChatGPT, Gemini' },
+            assist: { color: '#2f6ed3', text: 'IA Generative', tools: 'ChatGPT, Claude, Gemini' },
+            hybrid: { color: '#7c3aed', text: 'Hybride IA + automatisation', tools: 'Make, Zapier, n8n + ChatGPT, Claude, Gemini' },
+            valorize: { color: '#0e7490', text: 'Validation humaine', tools: 'Aucun outil IA prioritaire' },
+            ignore: { color: '#64748b', text: 'Peu prioritaire', tools: 'Aucun outil IA prioritaire' }
+        };
+
+        const TASK_COLORS = [
+            '#0e7490', '#f59e0b', '#7c3aed', '#16a34a', '#dc2626',
+            '#2563eb', '#db2777', '#ea580c', '#059669', '#4f46e5',
+            '#be123c', '#0891b2', '#9333ea', '#65a30d'
+        ];
+
+        function getTaskColor(index) {
+            return TASK_COLORS[index % TASK_COLORS.length];
+        }
+
+        const initialSuggestionsList = [
+            "Rediger les devis",
+            "Gerer les reseaux sociaux",
+            "Repondre aux emails clients",
+            "Saisir les factures fournisseur",
+            "Planifier les rendez-vous",
+            "Rediger des articles de blog",
+            "Analyser les ventes",
+            "Relancer les prospects",
+            "Relancer les factures impayées",
+            "Récolter les avis des clients",
+            "Traiter les réclamations",
+            "Réaliser une veille sur la concurrence",
+            "Trier le courrier et les e-mails"
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            initTaskSuggestions();
+            initIntroTooltipNotifications();
+        });
+
+        function initIntroTooltipNotifications() {
+            document.querySelectorAll('.intro-help-trigger').forEach(trigger => {
+                const dot = trigger.querySelector('.intro-info-dot');
+                if (!dot) return;
+
+                const stopNotification = () => {
+                    dot.classList.remove('notify-active');
+                };
+
+                trigger.addEventListener('mouseenter', stopNotification, { once: true });
+                trigger.addEventListener('focusin', stopNotification, { once: true });
+            });
+        }
+
+        // --- THEME TOGGLE LOGIC ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            
+            // Toggle icons
+            document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+            document.getElementById('icon-moon').classList.toggle('block', !isDark);
+            document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+            document.getElementById('icon-sun').classList.toggle('block', isDark);
+            
+            if(chart) { 
+                updateChartColors(chart);
+            }
+        }
+
+        // --- STEP 1 UI LOGIC ---
+        function toggleCustomActivity() {
+            const select = document.getElementById('activity-select');
+            const customWrapper = document.getElementById('custom-activity-wrapper');
+            if (select.value === 'Autre') { select.classList.add('hidden'); customWrapper.classList.remove('hidden'); document.getElementById('activity-custom').focus(); }
+        }
+        function resetActivity() {
+            const select = document.getElementById('activity-select');
+            const customWrapper = document.getElementById('custom-activity-wrapper');
+            document.getElementById('activity-custom').value = '';
+            customWrapper.classList.add('hidden'); select.classList.remove('hidden'); select.value = '';
+            markDashboardDirty();
+        }
+        function toggleCustomFrein() {
+            const select = document.getElementById('freins-select');
+            const wrapper = document.getElementById('custom-frein-wrapper');
+            if(select.value === 'Autre') { select.classList.add('hidden'); wrapper.classList.remove('hidden'); document.getElementById('frein-custom').focus(); }
+        }
+        function resetFrein() {
+            const select = document.getElementById('freins-select');
+            const wrapper = document.getElementById('custom-frein-wrapper');
+            document.getElementById('frein-custom').value = '';
+            wrapper.classList.add('hidden'); select.classList.remove('hidden'); select.value = '';
+            markDashboardDirty();
+        }
+
+        function checkFrustrationReveal() {
+            const hasChecked = Array.from(document.querySelectorAll('.frustration-cb.predefined-frustration')).some(cb => cb.checked);
+            const otherLabel = document.getElementById('label-frustration-other');
+            if (hasChecked) { otherLabel.classList.remove('hidden'); otherLabel.classList.add('flex'); }
+            else { otherLabel.classList.add('hidden'); otherLabel.classList.remove('flex'); }
+        }
+        function toggleCustomFrustration() {
+            if (document.getElementById('frustration-other-cb').checked) {
+                document.getElementById('custom-frustration-wrapper').classList.remove('hidden');
+                document.getElementById('frustration-custom').focus();
+                document.getElementById('label-frustration-other').classList.add('hidden');
+            }
+        }
+        function handleCustomFrustrationKeypress(e, input) { if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) addCustomFrustrationOption(input.value.trim()); } }
+        function addCustomFrustrationOption(text) {
+            const grid = document.getElementById('frustrations-grid');
+            const label = document.createElement('label'); label.className = 'flex items-center gap-3 cursor-pointer';
+            label.onchange = function() { if (!this.querySelector('input').checked) this.remove(); };
+            label.innerHTML = `<input type="checkbox" class="cyber-checkbox frustration-cb" value="${text}" checked><span class="text-sm text-slate-700 dark:text-slate-300">${text}</span>`;
+            grid.insertBefore(label, document.getElementById('label-frustration-other')); resetFrustration();
+            markDashboardDirty();
+        }
+        function resetFrustration() {
+            document.getElementById('frustration-other-cb').checked = false;
+            document.getElementById('frustration-custom').value = '';
+            document.getElementById('custom-frustration-wrapper').classList.add('hidden');
+            checkFrustrationReveal();
+            markDashboardDirty();
+        }
+
+        function checkVisionReveal() {
+            const hasChecked = Array.from(document.querySelectorAll('.vision-cb.predefined-vision')).some(cb => cb.checked);
+            const otherLabel = document.getElementById('label-vision-other');
+            if (hasChecked) { otherLabel.classList.remove('hidden'); otherLabel.classList.add('flex'); }
+            else { otherLabel.classList.add('hidden'); otherLabel.classList.remove('flex'); }
+        }
+        function toggleCustomVision() {
+            if (document.getElementById('vision-other-cb').checked) {
+                document.getElementById('custom-vision-wrapper').classList.remove('hidden');
+                document.getElementById('vision-custom').focus();
+                document.getElementById('label-vision-other').classList.add('hidden');
+            }
+        }
+        function handleCustomVisionKeypress(e, input) { if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) addCustomVisionOption(input.value.trim()); } }
+        function addCustomVisionOption(text) {
+            const grid = document.getElementById('vision-grid');
+            const label = document.createElement('label'); label.className = 'flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all';
+            label.onchange = function() { if (!this.querySelector('input').checked) this.remove(); };
+            label.innerHTML = `<input type="checkbox" class="cyber-checkbox vision-cb shrink-0" value="${text}" checked><strong class="text-sm text-slate-900 dark:text-white">${text}</strong>`;
+            grid.insertBefore(label, document.getElementById('label-vision-other')); resetVision();
+            markDashboardDirty();
+        }
+        function resetVision() {
+            document.getElementById('vision-other-cb').checked = false;
+            document.getElementById('vision-custom').value = '';
+            document.getElementById('custom-vision-wrapper').classList.add('hidden');
+            checkVisionReveal();
+            markDashboardDirty();
+        }
+
+        function toggleCustomTool() { if (document.getElementById('tool-other-cb').checked) { document.getElementById('custom-tool-wrapper').classList.remove('hidden'); document.getElementById('tool-custom').focus(); document.getElementById('label-tool-other').classList.add('hidden'); } }
+        function handleCustomToolKeypress(e, input) { if (e.key === 'Enter') { e.preventDefault(); if (input.value.trim()) addCustomToolOption(input.value.trim()); } }
+        function addCustomToolOption(text) {
+            const grid = document.getElementById('tools-grid');
+            const label = document.createElement('label'); label.className = 'flex items-center gap-3 cursor-pointer p-4 border border-slate-300 dark:border-slate-700 rounded-lg hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all';
+            label.onchange = function() { if (!this.querySelector('input').checked) this.remove(); };
+            label.innerHTML = `<input type="checkbox" class="cyber-checkbox data-tool" value="${text}" checked><span class="text-sm text-slate-700 dark:text-slate-300">${text}</span>`;
+            grid.insertBefore(label, document.getElementById('label-tool-other')); resetTool();
+            markDashboardDirty();
+        }
+        function resetTool() { document.getElementById('tool-other-cb').checked = false; document.getElementById('tool-custom').value = ''; document.getElementById('custom-tool-wrapper').classList.add('hidden'); document.getElementById('label-tool-other').classList.remove('hidden'); markDashboardDirty(); }
+
+        // --- NAVIGATION ---
+        function nextStep(step) {
+            if (step === 4 && !dashboardReady) {
+                generateDashboard();
+                return;
+            }
+            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+            if(step === 3 && chart) setTimeout(() => chart.resize(), 400);
+            
+            for(let i=1; i<=4; i++) {
+                const ind = document.getElementById(`ind-${i}`);
+                if(ind) i <= step ? ind.classList.replace('bg-slate-300', 'bg-violet-600').replace('bg-slate-700', 'bg-violet-600') : ind.classList.replace('bg-violet-600', document.documentElement.classList.contains('dark') ? 'bg-slate-700' : 'bg-slate-300');
+            }
+        }
+
+        // --- SCANNER OPÉRATIONNEL ---
+        function initTaskSuggestions() {
+            const container = document.getElementById('task-suggestions-container');
+            container.innerHTML = '';
+            initialSuggestionsList.forEach(task => {
+                const btn = document.createElement('button');
+                btn.className = 'task-sugg-btn inline-flex items-center min-h-[44px] text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 px-4 py-2 rounded-full transition-colors shadow-sm';
+                btn.dataset.taskName = task;
+                btn.textContent = task;
+                btn.onclick = () => addTask(task);
+                container.appendChild(btn);
+            });
+        }
+
+        function setSuggestionSelected(name, selected) {
+            const normalizedName = name.toLowerCase();
+            document.querySelectorAll('.task-sugg-btn').forEach(btn => {
+                const taskName = (btn.dataset.taskName || btn.textContent.trim()).toLowerCase();
+                if (taskName !== normalizedName) return;
+
+                btn.disabled = selected;
+                btn.classList.toggle('is-selected', selected);
+                btn.setAttribute('aria-disabled', selected ? 'true' : 'false');
+            });
+        }
+
+        function addTask(name) {
+            if(tasks.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+                setSuggestionSelected(name, true);
+                return false;
+            }
+            const isFirst = tasks.length === 0;
+            const newTask = { id: Date.now(), name: name, time: 5, value: 5, evaluated: true };
+            if(isFirst) firstTaskId = newTask.id;
+
+            tasks.push(newTask);
+            setSuggestionSelected(name, true);
+            markDashboardDirty();
+            buildTaskCard(newTask);
+            
+            const layout = document.getElementById('scanner-main-layout');
+            layout.classList.remove('hidden');
+            setTimeout(() => layout.classList.replace('opacity-0', 'opacity-100'), 50);
+            
+            updateTaskCountWarning();
+            return true;
+        }
+
+        function addCustomTaskFromInput() {
+            const input = document.getElementById('taskInput');
+            if (input.value.trim()) { addTask(input.value.trim()); resetTaskInput(); }
+        }
+        function handleCustomTaskKeypress(e, input) { if (e.key === 'Enter') { e.preventDefault(); addCustomTaskFromInput(); } }
+        function resetTaskInput() {
+            document.getElementById('taskInput').value = '';
+            document.getElementById('taskInput').focus();
+        }
+
+        function removeTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            markDashboardDirty();
+            const card = document.getElementById(`task-card-${id}`);
+            if(card) card.remove();
+            
+            if(tasks.length === 0) {
+                document.getElementById('scanner-main-layout').classList.add('hidden');
+                document.getElementById('scanner-nav').classList.add('max-w-3xl');
+                layoutRevealed = false;
+                const evalPanel = document.getElementById('evaluation-panel');
+                evalPanel.classList.remove('lg:w-1/2');
+                evalPanel.classList.add('lg:w-full');
+                document.getElementById('plan-action-container').classList.add('hidden');
+                firstTaskId = null;
+            }
+            
+            document.querySelectorAll('.task-sugg-btn').forEach(btn => {
+                const name = btn.dataset.taskName || btn.textContent.trim();
+                const selected = tasks.some(t => t.name.toLowerCase() === name.toLowerCase());
+                setSuggestionSelected(name, selected);
+            });
+            
+            updateChart();
+            updateInterpretationHint();
+            refreshVisibleStrategicAnalysis();
+            updateTaskCountWarning();
+        }
+
+        function refreshVisibleStrategicAnalysis() {
+            const legend = document.getElementById('matrix-legend');
+            const dynamicContent = document.getElementById('dynamic-interpretation-content');
+            if (legend && dynamicContent && !legend.classList.contains('hidden')) {
+                dynamicContent.innerHTML = generateSubjectiveInterpretation();
+            }
+
+            if (dashboardReady) {
+                const matrixAnalysis = document.getElementById('dashboard-matrix-analysis');
+                if (matrixAnalysis) {
+                    matrixAnalysis.innerHTML = generateSubjectiveInterpretation();
+                }
+            }
+        }
+
+        function stopPulse(triggerElement, type) {
+            const textSpan = triggerElement.querySelector(type === 'time' ? '.eval-text-time' : '.eval-text-value');
+            const iconSpan = triggerElement.querySelector('.eval-icon');
+            
+            if (textSpan) {
+                textSpan.classList.remove('animate-custom-pulse', 'border-b', 'border-dashed');
+                if (type === 'time') {
+                    textSpan.classList.remove('text-amber-600', 'dark:text-amber-400', 'border-amber-400');
+                } else {
+                    textSpan.classList.remove('text-blue-600', 'dark:text-blue-400', 'border-blue-400');
+                }
+                textSpan.classList.add('text-slate-600', 'dark:text-slate-400');
+            }
+            if (iconSpan) {
+                iconSpan.classList.remove('animate-custom-pulse');
+            }
+            triggerElement.removeAttribute('onmouseenter');
+        }
+
+        function normalizeTaskName(name) {
+            return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function getTaskSolutionType(name) {
+            const normalized = normalizeTaskName(name || '');
+            const explicitRules = [
+                { keywords: ['planifier les rendez-vous', 'planifier rdv', 'prise de rendez-vous'], type: 'automate' },
+                { keywords: ['saisir les factures fournisseur', 'saisie factures fournisseur'], type: 'automate' },
+                { keywords: ['relancer les factures impayees', 'relance factures impayees'], type: 'automate' },
+                { keywords: ['recolter les avis des clients', 'collecter les avis des clients'], type: 'automate' },
+                { keywords: ['trier le courrier et les e-mails', 'trier le courrier et les emails'], type: 'automate' },
+                { keywords: ['rediger des articles de blog', 'redaction articles de blog'], type: 'hybrid' },
+                { keywords: ['rediger les devis', 'redaction de devis'], type: 'assist' },
+                { keywords: ['realiser une veille sur la concurrence', 'veille concurrentielle'], type: 'hybrid' },
+                { keywords: ['relancer les prospects', 'relance prospects'], type: 'hybrid' },
+                { keywords: ['repondre aux emails clients', 'repondre aux mails clients'], type: 'hybrid' },
+                { keywords: ['gerer les reseaux sociaux', 'gestion reseaux sociaux'], type: 'hybrid' },
+                { keywords: ['traiter les reclamations', 'gestion des reclamations'], type: 'hybrid' },
+                { keywords: ['analyser les ventes', 'analyse des ventes'], type: 'hybrid' }
+            ];
+            const sensitiveKeywords = [
+                'validation paiement', 'valider paiement', 'valider un paiement',
+                'remboursement', 'rembourser', 'virement', 'iban', 'banque',
+                'donnees sensibles', 'sante', 'medical', 'juridique',
+                'litige critique', 'decision sensible', 'decision rh'
+            ];
+            const automationKeywords = [
+                'planifier', 'rendez-vous', 'rdv', 'agenda', 'calendrier', 'reservation',
+                'saisir', 'saisie', 'facture fournisseur', 'factures fournisseur',
+                'factures impayees', 'facture impayee', 'impayee', 'impaye',
+                'recolter les avis', 'collecter les avis', 'avis des clients', 'avis client',
+                'trier', 'courrier', 'classer', 'archiver', 'ranger',
+                'importer', 'exporter', 'copier', 'coller', 'remplir',
+                'programmer', 'publier', 'rappel', 'notification', 'workflow'
+            ];
+            const generativeKeywords = [
+                'rediger', 'ecrire', 'devis', 'article', 'blog', 'newsletter',
+                'repondre', 'reponse', 'support client', 'email client', 'mail client',
+                'analyser', 'analyse', 'ventes',
+                'synthese', 'resumer',
+                'contenu', 'reseaux sociaux', 'social'
+            ];
+            const hybridKeywords = [
+                'veille', 'concurrence', 'prospect', 'prospection',
+                'reclamation', 'reclamations', 'email client', 'emails clients',
+                'mail client', 'mails clients', 'support client',
+                'reseaux sociaux', 'social media', 'community management',
+                'analyse des ventes', 'analyser les ventes', 'tableau de bord',
+                'reporting', 'benchmark'
+            ];
+
+            const explicit = explicitRules.find(rule => rule.keywords.some(keyword => normalized.includes(keyword)));
+            if (explicit) return explicit.type;
+
+            if (sensitiveKeywords.some(keyword => normalized.includes(keyword))) return 'valorize';
+
+            if (hybridKeywords.some(keyword => normalized.includes(keyword))) return 'hybrid';
+
+            const hasAutomation = automationKeywords.some(keyword => normalized.includes(keyword));
+            const hasGenerative = generativeKeywords.some(keyword => normalized.includes(keyword));
+            if (hasAutomation && hasGenerative) return 'hybrid';
+            if (hasAutomation) return 'automate';
+            if (hasGenerative) return 'assist';
+            return 'unknown';
+        }
+
+        function getTaskExample(name, type) {
+            const normalized = normalizeTaskName(name);
+            const examples = [
+                {
+                    match: ['devis'],
+                    time: 'Ex : 2h a rediger/relire des devis = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : devis envoyes plus vite = ventes plus rapides : 8-10.'
+                },
+                {
+                    match: ['reseaux sociaux', 'social'],
+                    time: 'Ex : 2h a creer des posts = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : genere des prospects qualifies = 8-10 ; simple presence = 4.'
+                },
+                {
+                    match: ['courrier', 'trier'],
+                    time: 'Ex : 2h a trier courrier/e-mails = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : messages prioritaires traites plus vite = 6-8.'
+                },
+                {
+                    match: ['email', 'mail'],
+                    time: 'Ex : 2h a trier/repondre aux emails = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : reponses clients plus rapides = satisfaction/ventes : 7-9.'
+                },
+                {
+                    match: ['impaye', 'relancer les factures'],
+                    time: 'Ex : 2h a suivre et relancer les impayes = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : tresorerie amelioree et moins d oublis = 8-10.'
+                },
+                {
+                    match: ['facture'],
+                    time: 'Ex : 2h a saisir/controler les factures = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : moins d erreurs et tresorerie a jour = 6-8.'
+                },
+                {
+                    match: ['avis'],
+                    time: 'Ex : 2h a demander/centraliser les avis = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : avis visibles qui rassurent les prospects = 7-9.'
+                },
+                {
+                    match: ['reclamation'],
+                    time: 'Ex : 2h a traiter les reclamations = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : clients retenus et litiges reduits = 8-10.'
+                },
+                {
+                    match: ['veille', 'concurrence'],
+                    time: 'Ex : 2h a surveiller offres/prix concurrents = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : decisions commerciales mieux informees = 7-9.'
+                },
+                {
+                    match: ['rendez-vous', 'rdv'],
+                    time: 'Ex : 2h a planifier/relancer des RDV = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : agenda rempli et moins d oublis clients = 7-9.'
+                },
+                {
+                    match: ['blog', 'article'],
+                    time: 'Ex : 2h a rediger un article = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : attire du trafic qualifie sur la duree = 7-9.'
+                },
+                {
+                    match: ['vente'],
+                    time: 'Ex : 2h a analyser tableaux/CA = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : decisions commerciales plus fiables = 8-10.'
+                },
+                {
+                    match: ['prospect'],
+                    time: 'Ex : 2h a relancer les prospects = 5 ; 5h+ = 9-10.',
+                    value: 'Ex : relances regulieres qui convertissent = 8-10.'
+                }
+            ];
+            const found = examples.find(item => item.match.some(keyword => normalized.includes(keyword)));
+            if (found) return found[type];
+            return type === 'time'
+                ? `Ex : si "${name}" prend 2h/semaine = 5 ; 5h+ = 9-10.`
+                : `Ex : si "${name}" impacte clients/CA = 8-10.`;
+        }
+
+        function buildTaskCard(task) {
+            const list = document.getElementById('tasksList');
+            const logic = getTaskLogic(task.time, task.value, task.name);
+            const isFirst = task.id === firstTaskId;
+            const timeExample = getTaskExample(task.name, 'time');
+            const valueExample = getTaskExample(task.name, 'value');
+            
+            const card = document.createElement('div');
+            card.id = `task-card-${task.id}`;
+            card.className = `bg-white dark:bg-slate-900 border border-cyan-200 dark:border-cyan-900 p-4 rounded-xl relative transition-all duration-300 shadow-sm`;
+            card.style.borderLeft = '4px solid #0e7490';
+            
+            card.innerHTML = `
+                <div class="flex items-start justify-between gap-4 mb-3">
+                    <h3 class="font-bold text-slate-900 dark:text-white text-lg leading-snug">${task.name}</h3>
+                    <button onclick="removeTask(${task.id})" class="text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-300 text-sm transition-colors">Retirer</button>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="task-eval-row grid grid-cols-[minmax(120px,190px)_minmax(0,1fr)_36px] items-center gap-x-4 gap-y-2">
+                        <div class="label-tooltip-trigger">
+                            <label class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 cursor-help whitespace-nowrap">
+                                <span class="eval-text-time">Temps perdu</span>
+                                <span class="eval-icon">(i)</span>
+                            </label>
+                            <div class="eval-tooltip absolute top-full left-0 mt-2 w-[min(320px,calc(100vw-4rem))] text-[10px] p-3 rounded-lg z-50 leading-relaxed">
+                                <strong class="text-amber-700 dark:text-amber-400 block mb-1">${task.name}</strong>
+                                <span class="text-slate-600 dark:text-slate-400 italic">${timeExample}</span>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="10" value="${task.time}" class="range-fill" oninput="handleSliderChange(${task.id}, 'time', this.value)">
+                        <span class="text-sm text-slate-900 dark:text-white font-bold text-right" id="val-time-${task.id}">${task.time}</span>
+                    </div>
+
+                    <div class="task-eval-row grid grid-cols-[minmax(120px,190px)_minmax(0,1fr)_36px] items-center gap-x-4 gap-y-2">
+                        <div class="label-tooltip-trigger">
+                            <label class="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 cursor-help whitespace-nowrap">
+                                <span class="eval-text-value">Valeur strategique</span>
+                                <span class="eval-icon">(i)</span>
+                            </label>
+                            <div class="eval-tooltip absolute top-full left-0 mt-2 w-[min(320px,calc(100vw-4rem))] text-[10px] p-3 rounded-lg z-50 leading-relaxed">
+                                <strong class="text-blue-700 dark:text-blue-400 block mb-1">${task.name}</strong>
+                                <span class="text-slate-600 dark:text-slate-400 italic">${valueExample}</span>
+                            </div>
+                        </div>
+                        <input type="range" min="0" max="10" value="${task.value}" class="range-fill" oninput="handleSliderChange(${task.id}, 'value', this.value)">
+                        <span class="text-sm text-slate-900 dark:text-white font-bold text-right" id="val-value-${task.id}">${task.value}</span>
+                    </div>
+                </div>
+            `;
+            list.prepend(card);
+            handleSliderChange(task.id, 'time', task.time || 0);
+            handleSliderChange(task.id, 'value', task.value || 0);
+        }
+
+        function handleSliderChange(id, type, val) {
+            const task = tasks.find(t => t.id === id);
+            if(!task) return;
+            
+            task[type] = parseInt(val);
+            task.evaluated = true;
+            markDashboardDirty();
+            
+            const display = document.getElementById(`val-${type}-${id}`);
+            if(display) display.innerText = val;
+
+            const slider = document.querySelector(`#task-card-${id} .range-fill[oninput*="'${type}'"]`);
+            if(slider) {
+                const percent = val * 10;
+                slider.style.background = `linear-gradient(to right, #0e7490 ${percent}%, #d1d5db ${percent}%)`;
+            }
+
+            const logic = getTaskLogic(task.time, task.value, task.name);
+            const card = document.getElementById(`task-card-${id}`);
+            if(card) card.style.borderLeft = '4px solid #0e7490';
+
+            // --- REVEAL LAYOUT LOGIC ---
+            if(!layoutRevealed && (task.time > 0 || task.value > 0)) {
+                layoutRevealed = true;
+                const planContainer = document.getElementById('plan-action-container');
+                
+                planContainer.classList.remove('hidden');
+                setTimeout(() => planContainer.classList.replace('scale-95', 'scale-100'), 50);
+                
+                if(chart) { setTimeout(() => chart.resize(), 500); }
+            }
+            
+            updateChart();
+            updateInterpretationHint();
+            updateTaskCountWarning();
+        }
+
+        function updateTaskCountWarning() {
+            const count = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0)).length;
+            const warning = document.getElementById('task-count-warning');
+            if (count < 3 && tasks.length > 0) {
+                warning.classList.remove('hidden');
+                warning.className = 'bg-amber-100 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-500/30 text-amber-800 dark:text-amber-200 text-[10px] px-3 py-2 rounded-lg flex items-center gap-2 mb-4';
+                warning.innerHTML = `<span>💡</span> <span>Pour un plan d'action optimal, évaluez au moins <strong>3 tâches</strong>. (${count}/3)</span>`;
+            } else { warning.classList.add('hidden'); }
+        }
+
+        function getTaskLogic(time, value, name = '') {
+            const solutionType = getTaskSolutionType(name);
+
+            if (solutionType === 'valorize') return LOGIC.valorize;
+
+            if (time >= 6) {
+                if (solutionType === 'automate') return LOGIC.automate;
+                if (solutionType === 'assist') return LOGIC.assist;
+                if (solutionType === 'hybrid') return LOGIC.hybrid;
+                return value >= 5 ? LOGIC.hybrid : LOGIC.automate;
+            }
+
+            if (value >= 5 && solutionType !== 'unknown') {
+                if (solutionType === 'automate') return LOGIC.automate;
+                if (solutionType === 'assist') return LOGIC.assist;
+                if (solutionType === 'hybrid') return LOGIC.hybrid;
+            }
+
+            if (value >= 5) return LOGIC.valorize;
+            return LOGIC.ignore;
+        }
+
+        function updateInterpretationHint() {
+            const count = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0)).length;
+            if (count >= 3) {
+                document.getElementById('interpretation-hint').classList.remove('hidden');
+            } else {
+                document.getElementById('interpretation-hint').classList.add('hidden');
+                document.getElementById('matrix-legend').classList.add('hidden');
+            }
+        }
+
+        function taskMatches(normalizedName, keywords) {
+            return keywords.some(keyword => normalizedName.includes(normalizeTaskName(keyword)));
+        }
+
+        function getTaskActionText(task, logic) {
+            const normalized = normalizeTaskName(task.name || '');
+            const matches = keywords => taskMatches(normalized, keywords);
+
+            if (matches(['video', 'videos', 'montage', 'monter des videos', 'monter une video', 'reel', 'short'])) {
+                return "utiliser l'IA pour pr&eacute;parer le script, le plan de montage ou les sous-titres, puis automatiser la publication si besoin. Garder une validation humaine sur le rendu final.";
+            }
+            if (matches(['article', 'blog', 'newsletter', 'contenu', 'publication'])) {
+                return "faire produire une premi&egrave;re version par l'IA, ajouter votre expertise, puis automatiser la mise en brouillon ou la publication.";
+            }
+            if (matches(['reseaux sociaux', 'social', 'community management'])) {
+                return "faire pr&eacute;parer les textes et id&eacute;es de posts par l'IA, programmer la publication, puis valider le ton et les visuels.";
+            }
+            if (matches(['rendez-vous', 'rdv', 'agenda', 'calendrier', 'reservation'])) {
+                return "connecter un agenda ou un formulaire, envoyer confirmations et rappels automatiquement, puis garder la main sur les cas particuliers.";
+            }
+            if (matches(['factures impayees', 'facture impayee', 'impaye', 'impayee'])) {
+                return "d&eacute;clencher les relances selon l'&eacute;ch&eacute;ance, adapter le message au retard, puis bloquer les cas litigieux pour validation.";
+            }
+            if (matches(['facture fournisseur', 'factures fournisseur', 'saisie facture', 'saisir les factures'])) {
+                return "extraire les informations de facture, pr&eacute;remplir le suivi, puis contr&ocirc;ler les montants avant toute d&eacute;cision de paiement.";
+            }
+            if (matches(['avis client', 'avis des clients', 'recolter les avis', 'collecter les avis'])) {
+                return "envoyer automatiquement la demande d'avis apr&egrave;s la prestation, centraliser les retours, puis alerter en cas d'avis n&eacute;gatif.";
+            }
+            if (matches(['reclamation', 'reclamations', 'plainte', 'litige'])) {
+                return "centraliser les demandes, faire r&eacute;sumer le contexte par l'IA, puis proposer une r&eacute;ponse &agrave; valider avant envoi.";
+            }
+            if (matches(['veille', 'concurrence', 'benchmark'])) {
+                return "automatiser la collecte de sources, faire synth&eacute;tiser les changements par l'IA, puis d&eacute;cider humainement des actions &agrave; mener.";
+            }
+            if (matches(['vente', 'ventes', 'ca', 'chiffre d affaires', 'tableau de bord', 'reporting'])) {
+                return "centraliser les chiffres, automatiser un tableau de bord, puis utiliser l'IA pour faire ressortir les tendances et les pistes d'action.";
+            }
+            if (matches(['prospect', 'prospection', 'relancer les prospects'])) {
+                return "automatiser les rappels de suivi, personnaliser les messages avec l'IA, puis valider les relances importantes avant envoi.";
+            }
+            if (matches(['email', 'mail', 'support client', 'repondre aux'])) {
+                return "trier les messages automatiquement, faire proposer une r&eacute;ponse par l'IA, puis garder une validation humaine pour les cas sensibles.";
+            }
+            if (matches(['devis'])) {
+                return "pr&eacute;remplir les informations client, faire reformuler l'offre par l'IA, puis valider prix, d&eacute;lais et conditions avant envoi.";
+            }
+            if (matches(['courrier', 'e-mails', 'emails', 'trier', 'classer', 'archiver'])) {
+                return "classer automatiquement les messages, signaler les urgences, puis r&eacute;sumer ce qui demande une vraie d&eacute;cision.";
+            }
+
+            if (logic === LOGIC.automate) {
+                return "transformer cette t&acirc;che en flux simple avec un d&eacute;clencheur clair, une action automatique et un contr&ocirc;le rapide.";
+            }
+            if (logic === LOGIC.hybrid) {
+                return "automatiser le d&eacute;clencheur ou la diffusion, puis utiliser l'IA pour pr&eacute;parer le contenu ou l'analyse &agrave; valider.";
+            }
+            if (logic === LOGIC.assist) {
+                return "utiliser l'IA pour produire une premi&egrave;re version exploitable, puis relire les informations cl&eacute;s avant usage.";
+            }
+            if (logic === LOGIC.valorize) {
+                return "garder la d&eacute;cision humaine, en utilisant l'IA seulement pour pr&eacute;parer le contexte ou comparer les options.";
+            }
+            return "ne pas lancer de chantier IA maintenant ; revoir cette t&acirc;che si elle devient plus fr&eacute;quente, plus longue ou plus risqu&eacute;e.";
+        }
+
+        function renderTaskActions(items, logic, className) {
+            return items.map(task => `
+                <p class="mt-1 text-xs ${className}">
+                    <strong>${escapeHtml(task.name)} :</strong> ${getTaskActionText(task, logic)}
+                </p>
+            `).join('');
+        }
+
+        function generateSubjectiveInterpretation() {
+            const evTasks = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0));
+            if (!evTasks.length) return '<p>Aucune t&acirc;che &eacute;valu&eacute;e pour le moment.</p>';
+
+            const automateTasks = evTasks
+                .filter(t => getTaskLogic(t.time, t.value, t.name) === LOGIC.automate)
+                .sort((a, b) => (b.time - b.value) - (a.time - a.value));
+            const hybridTasks = evTasks
+                .filter(t => getTaskLogic(t.time, t.value, t.name) === LOGIC.hybrid)
+                .sort((a, b) => (b.time + b.value) - (a.time + a.value));
+            const assistTasks = evTasks
+                .filter(t => getTaskLogic(t.time, t.value, t.name) === LOGIC.assist)
+                .sort((a, b) => (b.value + b.time) - (a.value + a.time));
+            const valorizeTasks = evTasks
+                .filter(t => getTaskLogic(t.time, t.value, t.name) === LOGIC.valorize)
+                .sort((a, b) => (b.value - b.time) - (a.value - a.time));
+            const manualTasks = evTasks
+                .filter(t => getTaskLogic(t.time, t.value, t.name) === LOGIC.ignore)
+                .sort((a, b) => (b.time + b.value) - (a.time + a.value));
+            const formatTask = task => `<strong>${escapeHtml(task.name)}</strong> <span class="text-xs text-slate-500 dark:text-slate-400">(${task.time}/10, ${task.value}/10)</span>`;
+            const conciseList = items => items.map(formatTask).join(', ');
+
+            let h = '<p class="mb-3 text-slate-900 dark:text-white font-bold">Synth&egrave;se strat&eacute;gique</p>';
+
+            if (automateTasks.length) {
+                h += `<div class="bg-amber-100 dark:bg-amber-900/20 p-3 rounded-lg border-l-4 border-amber-500 mb-3">
+                    <p><strong>Automatiser d'abord :</strong> ${conciseList(automateTasks)}.</p>
+                    ${renderTaskActions(automateTasks, LOGIC.automate, 'text-amber-800 dark:text-amber-300')}
+                </div>`;
+            }
+
+            if (hybridTasks.length) {
+                h += `<div class="bg-violet-100 dark:bg-violet-900/20 p-3 rounded-lg border-l-4 border-violet-600 mb-3">
+                    <p><strong>Solution hybride :</strong> ${conciseList(hybridTasks)}.</p>
+                    ${renderTaskActions(hybridTasks, LOGIC.hybrid, 'text-violet-800 dark:text-violet-300')}
+                </div>`;
+            }
+
+            if (assistTasks.length) {
+                h += `<div class="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg border-l-4 border-blue-500 mb-3">
+                    <p><strong>Assister avec l'IA :</strong> ${conciseList(assistTasks)}.</p>
+                    ${renderTaskActions(assistTasks, LOGIC.assist, 'text-blue-800 dark:text-blue-300')}
+                </div>`;
+            }
+
+            if (valorizeTasks.length) {
+                h += `<div class="bg-cyan-50 dark:bg-cyan-900/20 p-3 rounded-lg border-l-4 border-cyan-700 mb-3">
+                    <p><strong>Validation humaine :</strong> ${conciseList(valorizeTasks)}.</p>
+                    ${renderTaskActions(valorizeTasks, LOGIC.valorize, 'text-cyan-800 dark:text-cyan-300')}
+                </div>`;
+            }
+
+            if (manualTasks.length) {
+                h += `<div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-lg border-l-4 border-slate-400 mb-3">
+                    <p><strong>Peu prioritaire :</strong> ${conciseList(manualTasks)}.</p>
+                    ${renderTaskActions(manualTasks, LOGIC.ignore, 'text-slate-600 dark:text-slate-300')}
+                </div>`;
+            }
+
+            h += `
+                <div class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-lg">
+                    <p><strong>Prochaine &eacute;tape :</strong> choisir une solution &agrave; tester pendant 2 semaines, mesurer le temps gagn&eacute;, puis d&eacute;cider si elle m&eacute;rite d'&ecirc;tre &eacute;tendue.</p>
+                </div>
+            `;
+
+            return h;
+        }
+
+        function toggleMatrixLegend() {
+            document.getElementById('dynamic-interpretation-content').innerHTML = generateSubjectiveInterpretation();
+            document.getElementById('matrix-legend').classList.toggle('hidden');
+        }
+
+        function hideMatrixLegend() { document.getElementById('matrix-legend').classList.add('hidden'); }
+
+        // Nouvelle fonction pour mettre à jour les couleurs du graphique instantanément selon le thème
+        function updateChartColors(chartInstance) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const mainGridColor = isDark ? 'rgba(148, 163, 184, 0.45)' : '#d1d5db';
+            const subGridColor = isDark ? 'rgba(51, 65, 85, 0.35)' : '#e8edf2';
+            const textColor = isDark ? '#94a3b8' : '#8b95a1';
+            
+            ['x', 'y'].forEach(axis => {
+                chartInstance.options.scales[axis].grid.color = (c) => c.tick.value === 5 ? mainGridColor : subGridColor;
+                chartInstance.options.scales[axis].grid.lineWidth = (c) => c.tick.value === 5 ? 2 : 1;
+                chartInstance.options.scales[axis].ticks.color = textColor;
+                chartInstance.options.scales[axis].title.color = textColor;
+            });
+            chartInstance.update();
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('matrixChart').getContext('2d');
+            const bgPlugin = {
+                id: 'custom_bg',
+                beforeDraw: (chart) => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    
+                    const {ctx, chartArea: {top, right, bottom, left}, scales: {x, y}} = chart;
+                    ctx.save();
+                    const x5 = x.getPixelForValue(5);
+                    const y5 = y.getPixelForValue(5);
+                    ctx.font = '800 13px Inter';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+
+                    ctx.fillStyle = isDark ? 'rgba(14, 116, 144, 0.10)' : '#ecfeff';
+                    ctx.fillRect(left, top, x5 - left, y5 - top);
+                    ctx.fillStyle = isDark ? 'rgba(103, 232, 249, 0.95)' : '#0e7490';
+                    ctx.fillText('FORTE VALEUR', left + 16, top + 12);
+
+                    ctx.fillStyle = isDark ? 'rgba(37, 99, 235, 0.12)' : '#eef3fb';
+                    ctx.fillRect(x5, top, right - x5, y5 - top);
+                    ctx.fillStyle = isDark ? 'rgba(96, 165, 250, 0.95)' : '#2f6ed3';
+                    ctx.fillText('PRIORITE FORTE', x5 + 16, top + 12);
+
+                    ctx.fillStyle = isDark ? 'rgba(100, 116, 139, 0.10)' : '#f8fafc';
+                    ctx.fillRect(left, y5, x5 - left, bottom - y5);
+                    ctx.fillStyle = isDark ? 'rgba(203, 213, 225, 0.95)' : '#64748b';
+                    ctx.fillText('PEU PRIORITAIRE', left + 16, bottom - 24);
+
+                    ctx.fillStyle = isDark ? 'rgba(245, 158, 11, 0.10)' : '#fbf7ed';
+                    ctx.fillRect(x5, y5, right - x5, bottom - y5);
+                    ctx.fillStyle = isDark ? 'rgba(251, 191, 36, 0.95)' : '#f0a900';
+                    ctx.fillText('TEMPS A REDUIRE', x5 + 16, bottom - 24);
+
+                    ctx.restore();
+                }
+            };
+
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                plugins: [bgPlugin],
+                data: { datasets: [{ data: [], backgroundColor: [], borderColor: '#fff', borderWidth: 2, pointRadius: 8, pointHoverRadius: 9, clip: false }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: { duration: 0 },
+                    layout: { padding: { top: 12, right: 14, bottom: 4, left: 4 } },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Temps perdu', font: {size: 13, weight: '700'} },
+                            min: 0, max: 11,
+                            ticks: { stepSize: 1, font: { size: 12 }, callback: value => value <= 10 ? value : '' },
+                            border: { color: '#d1d5db' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Valeur Strategique', font: {size: 13, weight: '700'} },
+                            min: 0, max: 11,
+                            ticks: { stepSize: 1, font: { size: 12 }, callback: value => value <= 10 ? value : '' },
+                            border: { color: '#d1d5db' }
+                        }
+                    },
+                    plugins: { legend: false, tooltip: { callbacks: { label: (c) => c.raw ? `${c.raw.taskName} - ${c.raw.recommendation}` : '' } } }
+                }
+            });
+            
+            // Appliquer les couleurs au chargement initial
+            updateChartColors(chart);
+        }
+
+        function updateChart() {
+            if (!chart) return;
+            const evTasks = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0));
+            chart.data.datasets[0].data = evTasks.map(t => {
+                const logic = getTaskLogic(t.time, t.value, t.name);
+                return { x: t.time, y: t.value, taskName: t.name, recommendation: logic.text };
+            });
+            chart.data.datasets[0].backgroundColor = evTasks.map((_, index) => getTaskColor(index));
+            chart.data.datasets[0].borderColor = evTasks.map(() => '#ffffff');
+            renderMatrixTaskLegend(evTasks);
+            
+            // Re-appliquer les couleurs just in case
+            updateChartColors(chart);
+        }
+
+        function renderMatrixTaskLegend(evTasks) {
+            const html = evTasks.length
+                ? `
+                    <div class="matrix-task-legend-title">Solutions recommand&eacute;es</div>
+                    <div class="matrix-task-legend-list">
+                        ${evTasks.map((task, index) => {
+                    const logic = getTaskLogic(task.time, task.value, task.name);
+                    const recoClass = logic === LOGIC.automate
+                        ? 'matrix-task-reco-automate'
+                        : logic === LOGIC.assist
+                            ? 'matrix-task-reco-assist'
+                            : logic === LOGIC.hybrid
+                                ? 'matrix-task-reco-hybrid'
+                                : logic === LOGIC.valorize
+                                    ? 'matrix-task-reco-valorize'
+                                    : 'matrix-task-reco-ignore';
+                    return `
+                        <span class="matrix-task-legend-item">
+                            <span class="matrix-task-legend-name">
+                                <span class="matrix-task-legend-dot" style="background:${getTaskColor(index)}"></span>
+                                <span>${escapeHtml(task.name)}</span>
+                            </span>
+                            <span class="matrix-task-solution-label">Solution</span>
+                            <span class="matrix-task-reco ${recoClass}">${escapeHtml(logic.text)}</span>
+                        </span>
+                    `;
+                        }).join('')}
+                    </div>
+                `
+                : '';
+
+            ['matrix-task-legend', 'print-matrix-task-legend'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = html;
+                el.classList.toggle('hidden', !evTasks.length);
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function getSelectText(id, fallback = 'Non renseigné') {
+            const select = document.getElementById(id);
+            if (!select || !select.value) return fallback;
+            const option = select.options[select.selectedIndex];
+            return (option && option.textContent.trim()) || select.value || fallback;
+        }
+
+        function getCustomOrSelectText(selectId, customId, fallback = 'Non renseigné') {
+            const customValue = document.getElementById(customId)?.value.trim();
+            return customValue || getSelectText(selectId, fallback);
+        }
+
+        function getLabelText(input) {
+            const label = input.closest('label');
+            const textNode = label?.querySelector('span, strong');
+            return textNode?.textContent.trim() || input.value;
+        }
+
+        function getVisionSummary() {
+            const values = Array.from(document.querySelectorAll('.vision-cb:checked')).map(input => {
+                const label = input.closest('label');
+                const description = label?.querySelector('.flex.flex-col span');
+                const title = label?.querySelector('strong');
+                return description?.textContent.trim() || title?.textContent.trim() || input.value;
+            });
+            return values.length ? values : 'Non renseigné';
+        }
+
+        function getCheckedSummary(selector, fallback = 'Non renseigné') {
+            const values = Array.from(document.querySelectorAll(selector)).map(getLabelText);
+            return values.join(', ') || fallback;
+        }
+
+        function getRadioSummary(name, fallback = 'Non renseigné') {
+            const input = document.querySelector(`input[name="${name}"]:checked`);
+            return input ? getLabelText(input) : fallback;
+        }
+
+        function renderSummaryValue(value, options = {}) {
+            if (Array.isArray(value)) {
+                return `
+                    <ul class="space-y-2 text-lg font-semibold text-slate-950 dark:text-white leading-snug">
+                        ${value.map(item => `
+                            <li class="flex gap-2">
+                                ${options.hideMarkers ? '' : '<span class="mt-2.5 h-1.5 w-1.5 flex-none rounded-full bg-slate-500"></span>'}
+                                <span>${escapeHtml(item)}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+
+            return `<p class="text-lg font-semibold text-slate-950 dark:text-white leading-snug">${escapeHtml(value)}</p>`;
+        }
+
+        function renderSummaryCard(label, value) {
+            const hideMarkers = label === 'OBJECTIF STRATEGIQUE';
+            return `
+                <div class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-5 min-h-[112px]">
+                    <span class="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-3">${escapeHtml(label)}</span>
+                    ${renderSummaryValue(value, { hideMarkers })}
+                </div>
+            `;
+        }
+
+        function renderRecommendationBadge(logic) {
+            const className = logic === LOGIC.automate
+                ? 'bg-amber-100 text-amber-800'
+                : logic === LOGIC.assist
+                    ? 'bg-blue-100 text-blue-700'
+                    : logic === LOGIC.hybrid
+                        ? 'bg-violet-100 text-violet-800'
+                        : logic === LOGIC.valorize
+                            ? 'bg-cyan-50 text-cyan-800'
+                            : 'bg-slate-100 text-slate-700';
+            return `<span class="inline-flex items-center rounded-md px-3 py-1 text-xs font-bold ${className}">${escapeHtml(logic.text)}</span>`;
+        }
+
+        function getSelectValue(id) {
+            return document.getElementById(id)?.value || '';
+        }
+
+        function getCheckedValues(selector) {
+            return Array.from(document.querySelectorAll(selector)).map(getLabelText).filter(Boolean);
+        }
+
+        function getDiagnosticContext() {
+            const objectives = getVisionSummary();
+            const tools = getCheckedValues('.data-tool:checked');
+            const frustrations = getCheckedValues('.frustration-cb:checked');
+            const sensitiveInput = document.querySelector('input[name="rgpd-sensible"]:checked');
+            return {
+                iaValue: getSelectValue('ia-level'),
+                iaText: getSelectText('ia-level'),
+                activityText: getCustomOrSelectText('activity-select', 'activity-custom'),
+                dataQualityValue: getSelectValue('dataQuality'),
+                dataQualityText: getSelectText('dataQuality'),
+                tools,
+                toolsText: tools.join(', ') || 'Non renseigné',
+                frein: getCustomOrSelectText('freins-select', 'frein-custom'),
+                rgpdValue: sensitiveInput?.value || '',
+                rgpdText: getRadioSummary('rgpd-sensible'),
+                frustrations,
+                frustrationsText: frustrations.join(', '),
+                objectives: Array.isArray(objectives) ? objectives : [],
+                objectivesText: Array.isArray(objectives) ? objectives.join(', ') : objectives
+            };
+        }
+
+        function buildLeaderProfile(ctx) {
+            const ia = (ctx.iaValue || '').toLowerCase();
+            const quality = ctx.dataQualityValue || '';
+            const toolsCount = ctx.tools.length;
+            const isSensitive = ctx.rgpdValue === 'oui';
+            const hasIa = Boolean(ia);
+            const hasQuality = Boolean(quality);
+            const hasRgpd = Boolean(ctx.rgpdValue);
+            const activity = ctx.activityText || '';
+            const hasActivity = Boolean(activity) && !/^non renseign/i.test(activity);
+            const hasFrein = Boolean(ctx.frein) && !/^non renseign/i.test(ctx.frein);
+            const noMajorBlocker = /Aucun frein majeur/i.test(ctx.frein || '');
+            const hasBlockingFrein = hasFrein && !noMajorBlocker;
+            const isStructured = quality === 'centralisees' && toolsCount >= 2;
+            const isFragmented = quality === 'eparpillees' || quality === 'en_silos' || (hasQuality && toolsCount <= 1);
+            const isSiloed = quality === 'en_silos';
+            const isScattered = quality === 'eparpillees';
+            const combinedSignals = `${ctx.objectivesText || ''} ${ctx.frustrationsText || ''}`.toLowerCase();
+            const wantsEfficiency = /temps|charge mentale|administratif|rentabilit|fluidifier|relance|heures suppl|impay|courrier|email|mail/.test(combinedSignals);
+            const wantsGrowth = /client|qualit|chiffre|vente|visibilit|croissance|rentabilit/.test(combinedSignals);
+
+            if (!hasIa || !hasQuality || !hasRgpd) {
+                return {
+                    posture: "Votre profil n'est pas encore assez renseign&eacute; pour &ecirc;tre d&eacute;crit avec justesse. Quelques r&eacute;ponses manquent encore pour comprendre votre rapport &agrave; l'IA.",
+                    dataReadiness: "Compl&eacute;ter la maturit&eacute; num&eacute;rique, la qualit&eacute; des donn&eacute;es et le niveau RGPD avant de prioriser une solution.",
+                    vigilance: "Tant que le diagnostic est incomplet, &eacute;vitez de connecter des donn&eacute;es clients ou sensibles &agrave; des outils IA.",
+                    priority: "Finaliser les champs manquants, puis choisir un seul processus pilote &agrave; tester."
+                };
+            }
+
+            let posture = "Vous avez un profil pragmatique : vous voulez voir rapidement ce que l'IA peut changer dans votre quotidien, sans vous perdre dans trop d'outils.";
+            if (isSensitive && !isStructured) {
+                posture = "Vous avez un profil prudent : l'IA vous int&eacute;resse, mais vous avez besoin d'&ecirc;tre rassur&eacute; sur les donn&eacute;es, les acc&egrave;s et les responsabilit&eacute;s.";
+            } else if (isSiloed && toolsCount >= 2) {
+                posture = "Vous avez un profil d&eacute;j&agrave; num&eacute;rique, mais dispers&eacute; : vous utilisez plusieurs outils, sans avoir encore une organisation vraiment fluide.";
+            } else if (isScattered || isFragmented) {
+                posture = "Votre profil montre une envie d'avancer avec l'IA, mais aussi un besoin de retrouver de la clart&eacute; dans vos informations et vos habitudes de travail.";
+            } else if (ia === 'novice') {
+                posture = "Vous d&eacute;couvrez l'IA : vous avez besoin d'un usage simple, utile et rassurant pour prendre confiance.";
+            } else if (isStructured && wantsEfficiency && !isSensitive) {
+                posture = "Votre profil montre surtout un besoin de souffler : gagner du temps, r&eacute;duire les t&acirc;ches r&eacute;p&eacute;titives et all&eacute;ger la charge mentale.";
+            } else if (isStructured && wantsGrowth) {
+                posture = "Votre profil est tourn&eacute; vers le d&eacute;veloppement : mieux servir vos clients, gagner en qualit&eacute; et cr&eacute;er plus de valeur avec l'IA.";
+            } else if (ia === 'utilisateur' && isStructured) {
+                posture = "Vous avez d&eacute;j&agrave; une base solide avec les outils num&eacute;riques. Votre profil permet de tester des usages IA plus ambitieux, en gardant un regard humain sur les points importants.";
+            }
+
+            let dataReadiness = "Cadrer une entr&eacute;e, une sortie et un responsable pour le premier processus test&eacute;.";
+            if (quality === 'centralisees') {
+                dataReadiness = "Partir d'un flux o&ugrave; la donn&eacute;e est d&eacute;j&agrave; fiable, puis mesurer le gain obtenu.";
+            } else if (quality === 'en_silos') {
+                dataReadiness = "Choisir une source de r&eacute;f&eacute;rence et relier les outils autour d'un seul flux pilote.";
+            } else if (quality === 'eparpillees') {
+                dataReadiness = "Nettoyer et centraliser les informations utiles avant de brancher une IA ou une automatisation.";
+            }
+
+            let vigilance = isSensitive
+                ? "Donn&eacute;es sensibles : limitez les acc&egrave;s, choisissez des outils conformes et gardez une validation humaine."
+                : "Le risque est plus limit&eacute;, mais les acc&egrave;s et les donn&eacute;es clients doivent rester sous contr&ocirc;le.";
+            if (!isSensitive && hasBlockingFrein) {
+                vigilance = "Le frein principal doit &ecirc;tre trait&eacute; par un test simple : moins de complexit&eacute;, peu d'outils, r&eacute;sultat visible.";
+            }
+
+            let priority = "Choisir une t&acirc;che, tester pendant deux semaines, puis mesurer le temps gagn&eacute;.";
+            if (isFragmented) {
+                priority = "Cartographier un processus prioritaire, clarifier les donn&eacute;es, puis automatiser seulement l'&eacute;tape stable.";
+            } else if (isSensitive) {
+                priority = "Tester un cas utile sans donn&eacute;es sensibles, puis cadrer les acc&egrave;s avant d'aller plus loin.";
+            } else if (ia === 'utilisateur' && isStructured) {
+                priority = "Combiner automatisation, IA et validation humaine sur les t&acirc;ches &agrave; fort impact.";
+            } else if (hasBlockingFrein) {
+                priority = "Lever le frein principal avec un cas court, utile et peu risqu&eacute;.";
+            }
+
+            if (hasActivity) {
+                posture = `Dans votre secteur (${escapeHtml(activity)}), ${posture.charAt(0).toLowerCase()}${posture.slice(1)}`;
+            }
+
+            return { posture, dataReadiness, vigilance, priority };
+        }
+
+        function renderLeaderProfileSection() {
+            const container = document.getElementById('leader-profile-section');
+            if (!container) return;
+
+            const profile = buildLeaderProfile(getDiagnosticContext());
+            container.innerHTML = `
+                <div class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-5">
+                    <div class="mb-4">
+                        <h3 class="text-xl font-bold text-slate-950 dark:text-white mb-3">Lecture de votre profil</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${profile.posture}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                            <span class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">Point de d&eacute;part</span>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">${profile.dataReadiness}</p>
+                        </div>
+                        <div class="rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                            <span class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">Cadre &agrave; respecter</span>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">${profile.vigilance}</p>
+                        </div>
+                        <div class="rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                            <span class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">Prochaine action</span>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">${profile.priority}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateDashboard(options = {}) {
+            const evTasks = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0));
+            if(evTasks.length === 0) {
+                alert('Ajoutez au moins une tache avant de generer le bilan.');
+                updateTaskCountWarning();
+                return;
+            }
+            updateTaskCountWarning();
+
+            const summaryGrid = document.getElementById('diagnostic-summary-grid');
+            const summaryCards = [
+                ['OBJECTIF STRATEGIQUE', getVisionSummary()],
+                ['MATURITE NUMERIQUE', getSelectText('ia-level')],
+                ['FREIN PRINCIPAL', getCustomOrSelectText('freins-select', 'frein-custom')],
+                ['NIVEAU RGPD', getRadioSummary('rgpd-sensible')],
+                ['OUTILS ACTUELS', getCheckedSummary('.data-tool:checked')],
+                ['QUALITE DES DONNEES', getSelectText('dataQuality')]
+            ];
+            summaryGrid.innerHTML = summaryCards.map(([label, value]) => renderSummaryCard(label, value)).join('');
+            renderLeaderProfileSection();
+
+            let tableHtml = `
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-slate-950 dark:text-white mb-5">Plan d'action operationnel</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[760px] text-left text-sm">
+                            <thead>
+                                <tr class="bg-slate-900 text-white uppercase text-xs tracking-wide">
+                                    <th class="p-4 font-bold">Processus audite</th>
+                                    <th class="p-4 font-bold">Temps</th>
+                                    <th class="p-4 font-bold">Valeur</th>
+                                    <th class="p-4 font-bold">Recommandation</th>
+                                    <th class="p-4 font-bold">Outils suggeres</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+            `;
+
+            [...evTasks].sort((a, b) => b.time - a.time).forEach((task, index) => {
+                const logic = getTaskLogic(task.time, task.value, task.name);
+                const rowClass = index % 2 === 1 ? 'bg-slate-50 dark:bg-slate-900/50' : 'bg-white dark:bg-slate-950';
+                tableHtml += `
+                    <tr class="${rowClass}">
+                        <td class="p-4 font-semibold text-slate-950 dark:text-white">${escapeHtml(task.name)}</td>
+                        <td class="p-4 text-slate-950 dark:text-slate-200">${task.time}/10</td>
+                        <td class="p-4 text-slate-950 dark:text-slate-200">${task.value}/10</td>
+                        <td class="p-4">${renderRecommendationBadge(logic)}</td>
+                        <td class="p-4 text-slate-500 dark:text-slate-400">${escapeHtml(logic.tools)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            document.getElementById('dash-table-container').innerHTML = tableHtml;
+            const matrixImage = document.getElementById('print-chart-img');
+            const evTasksForLegend = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0));
+            renderMatrixTaskLegend(evTasksForLegend);
+            if (matrixImage && chart) {
+                chart.update('none');
+                matrixImage.src = chart.toBase64Image();
+                matrixImage.style.display = 'block';
+            }
+            const matrixAnalysis = document.getElementById('dashboard-matrix-analysis');
+            if (matrixAnalysis) {
+                matrixAnalysis.innerHTML = generateSubjectiveInterpretation();
+            }
+
+            document.getElementById('diagnostic-challenge').innerHTML = `
+                <p class="text-base leading-relaxed"><strong>Votre defi intersession :</strong> Completez ce diagnostic avec au minimum 8 taches. Vous le presenterez lors de la journee presentiel - c'est la base de votre projet certifiant.</p>
+            `;
+
+            dashboardReady = true;
+            if (!options.skipNavigation) {
+                nextStep(4);
+            }
+        }
+
+        function prepareAndPrint() {
+            try {
+                syncDashboardMatrix();
+                setTimeout(() => window.print(), 150);
+            } catch (error) {
+                console.error('Ouverture de l impression impossible.', error);
+                window.print();
+            }
+        }
+
+        function syncDashboardMatrix() {
+            const matrixImage = document.getElementById('print-chart-img');
+            const matrixAnalysis = document.getElementById('dashboard-matrix-analysis');
+            const evTasksForLegend = tasks.filter(t => t.evaluated && (t.time > 0 || t.value > 0));
+            let imageData = null;
+
+            renderMatrixTaskLegend(evTasksForLegend);
+
+            if (chart) {
+                chart.update('none');
+                imageData = {
+                    src: chart.toBase64Image('image/png'),
+                    width: chart.width || 900,
+                    height: chart.height || 420
+                };
+                if (matrixImage) {
+                    matrixImage.src = imageData.src;
+                    matrixImage.style.display = 'block';
+                }
+            }
+
+            if (matrixAnalysis) {
+                matrixAnalysis.innerHTML = generateSubjectiveInterpretation();
+            }
+            renderLeaderProfileSection();
+
+            return imageData;
+        }
+
+        function downloadBlob(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+
+        function buildDiagnosticPdf(matrixImage) {
+            const PAGE_W = 595.28;
+            const PAGE_H = 841.89;
+            const M = 36;
+            const CONTENT_W = PAGE_W - M * 2;
+            const pages = [];
+            let ops = [];
+            let y = M;
+
+            const colors = {
+                navy: [15, 23, 42],
+                muted: [100, 116, 139],
+                border: [226, 232, 240],
+                soft: [248, 250, 252],
+                blue: [47, 110, 211],
+                amber: [245, 158, 11],
+                amberSoft: [255, 248, 223],
+                blueSoft: [232, 240, 254],
+                slateSoft: [241, 245, 249],
+                white: [255, 255, 255],
+                black: [0, 0, 0]
+            };
+
+            const evTasks = tasks
+                .filter(t => t.evaluated && (t.time > 0 || t.value > 0))
+                .sort((a, b) => b.time - a.time);
+
+            function cleanPdfText(value) {
+                return String(value ?? 'Non renseigné')
+                    .replace(/[’‘]/g, "'")
+                    .replace(/[“”]/g, '"')
+                    .replace(/[–—]/g, '-')
+                    .replace(/œ/g, 'oe')
+                    .replace(/Œ/g, 'OE')
+                    .replace(/[\u2022]/g, '-')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function esc(value) {
+                return cleanPdfText(value).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            }
+
+            function rgb(color, stroke = false) {
+                return `${(color[0] / 255).toFixed(3)} ${(color[1] / 255).toFixed(3)} ${(color[2] / 255).toFixed(3)} ${stroke ? 'RG' : 'rg'}`;
+            }
+
+            function wrapText(text, width, size) {
+                const words = cleanPdfText(text).split(' ');
+                const lines = [];
+                let line = '';
+                const maxChars = Math.max(12, Math.floor(width / (size * 0.52)));
+
+                words.forEach(word => {
+                    const next = line ? `${line} ${word}` : word;
+                    if (next.length > maxChars && line) {
+                        lines.push(line);
+                        line = word;
+                    } else {
+                        line = next;
+                    }
+                });
+
+                if (line) lines.push(line);
+                return lines.length ? lines : ['Non renseigné'];
+            }
+
+            function newPage() {
+                if (ops.length) pages.push(ops.join('\n'));
+                ops = [];
+                y = M;
+            }
+
+            function ensure(height) {
+                if (y + height > PAGE_H - M) newPage();
+            }
+
+            function textLine(text, x, top, size = 10, font = 'F1', color = colors.black) {
+                ops.push(`${rgb(color)} BT /${font} ${size} Tf ${x.toFixed(2)} ${(PAGE_H - top - size).toFixed(2)} Td (${esc(text)}) Tj ET`);
+            }
+
+            function paragraph(text, x, width, size = 10, color = colors.black, font = 'F1', after = 6) {
+                const lines = wrapText(text, width, size);
+                const lineH = size * 1.35;
+                ensure(lines.length * lineH + after);
+                lines.forEach(line => {
+                    textLine(line, x, y, size, font, color);
+                    y += lineH;
+                });
+                y += after;
+            }
+
+            function rect(x, top, w, h, fill, stroke = null) {
+                if (fill) ops.push(`${rgb(fill)} ${x.toFixed(2)} ${(PAGE_H - top - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+                if (stroke) ops.push(`${rgb(stroke, true)} ${x.toFixed(2)} ${(PAGE_H - top - h).toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re S`);
+            }
+
+            function heading(text, size = 16) {
+                ensure(size + 16);
+                textLine(text, M, y, size, 'F2', colors.navy);
+                y += size + 14;
+            }
+
+            function valueLines(value) {
+                if (Array.isArray(value)) return value.length ? value.map(item => `- ${item}`) : ['Non renseigné'];
+                return [value || 'Non renseigné'];
+            }
+
+            function summaryCard(label, value, x, top, w, h) {
+                rect(x, top, w, h, colors.soft, colors.border);
+                textLine(label, x + 12, top + 14, 8, 'F1', colors.muted);
+                let textTop = top + 34;
+                valueLines(value).forEach(item => {
+                    wrapText(item, w - 24, 10).forEach(line => {
+                        textLine(line, x + 12, textTop, 10, 'F2', colors.navy);
+                        textTop += 13;
+                    });
+                });
+            }
+
+            function tableCell(lines, x, top, width, size = 9, font = 'F1', color = colors.navy) {
+                let localY = top;
+                lines.forEach(line => {
+                    textLine(line, x, localY, size, font, color);
+                    localY += size * 1.35;
+                });
+            }
+
+            function addTable() {
+                heading("Plan d'action operationnel", 14);
+                const cols = [178, 48, 48, 105, 144];
+                const starts = [M, M + cols[0], M + cols[0] + cols[1], M + cols[0] + cols[1] + cols[2], M + cols[0] + cols[1] + cols[2] + cols[3]];
+                const headerH = 28;
+                ensure(headerH + 20);
+                rect(M, y, CONTENT_W, headerH, colors.navy);
+                ['PROCESSUS AUDITE', 'TEMPS', 'VALEUR', 'RECOMMANDATION', 'OUTILS SUGGERES'].forEach((label, i) => {
+                    textLine(label, starts[i] + 8, y + 10, 8, 'F2', colors.white);
+                });
+                y += headerH;
+
+                evTasks.forEach((task, index) => {
+                    const logic = getTaskLogic(task.time, task.value, task.name);
+                    const rowValues = [
+                        cleanPdfText(task.name),
+                        `${task.time}/10`,
+                        `${task.value}/10`,
+                        logic.text,
+                        logic.tools
+                    ];
+                    const wrapped = rowValues.map((value, i) => wrapText(value, cols[i] - 16, i === 0 ? 9 : 8.5));
+                    const rowH = Math.max(34, ...wrapped.map(lines => lines.length * 12 + 16));
+                    ensure(rowH);
+                    rect(M, y, CONTENT_W, rowH, index % 2 ? colors.soft : colors.white);
+                    wrapped.forEach((lines, i) => {
+                        tableCell(lines, starts[i] + 8, y + 12, cols[i] - 16, i === 0 ? 9 : 8.5, i === 0 ? 'F2' : 'F1', colors.navy);
+                    });
+                    y += rowH;
+                });
+                y += 18;
+            }
+
+            function addMatrix() {
+                if (!matrixImage?.src) return;
+                heading("Matrice d'action", 14);
+                const imgW = Math.min(CONTENT_W, 420);
+                const imgH = imgW * (matrixImage.height / matrixImage.width);
+                ensure(imgH + 12);
+                ops.push(`q ${imgW.toFixed(2)} 0 0 ${imgH.toFixed(2)} ${(M + (CONTENT_W - imgW) / 2).toFixed(2)} ${(PAGE_H - y - imgH).toFixed(2)} cm /Im1 Do Q`);
+                y += imgH + 18;
+            }
+
+            function addAnalysis() {
+                heading('Analyse de la matrice', 14);
+                const temp = document.createElement('div');
+                temp.innerHTML = generateSubjectiveInterpretation();
+                const analysisText = cleanPdfText(temp.textContent || '');
+                paragraph(analysisText, M, CONTENT_W, 9.5, colors.navy, 'F1', 10);
+            }
+
+            function addChallenge() {
+                ensure(74);
+                rect(M, y, CONTENT_W, 62, colors.amberSoft, colors.amber);
+                y += 14;
+                paragraph("Votre defi intersession : Completez ce diagnostic avec au minimum 8 taches. Vous le presenterez lors de la journee presentielle - c'est la base de votre projet certifiant.", M + 14, CONTENT_W - 28, 10.5, colors.navy, 'F1', 0);
+                y += 12;
+            }
+
+            newPage();
+            textLine('Bilan diagnostic IA', M, y, 20, 'F2', colors.navy);
+            textLine(new Date().toLocaleDateString('fr-FR'), PAGE_W - M - 72, y + 5, 9, 'F1', colors.muted);
+            y += 34;
+
+            paragraph('Votre récapitulatif de diagnostic IA : objectifs, maturité numérique, risques, plan d action, matrice et analyse stratégique.', M, CONTENT_W, 10.5, colors.muted, 'F1', 10);
+
+            const cardGap = 12;
+            const cardW = (CONTENT_W - cardGap) / 2;
+            const cards = [
+                ['OBJECTIF STRATEGIQUE', getVisionSummary()],
+                ['MATURITE NUMERIQUE', getSelectText('ia-level')],
+                ['FREIN PRINCIPAL', getCustomOrSelectText('freins-select', 'frein-custom')],
+                ['NIVEAU RGPD', getRadioSummary('rgpd-sensible')],
+                ['OUTILS ACTUELS', getCheckedSummary('.data-tool:checked')],
+                ['QUALITE DES DONNEES', getSelectText('dataQuality')]
+            ];
+
+            for (let i = 0; i < cards.length; i += 2) {
+                ensure(92);
+                const top = y;
+                summaryCard(cards[i][0], cards[i][1], M, top, cardW, 80);
+                summaryCard(cards[i + 1][0], cards[i + 1][1], M + cardW + cardGap, top, cardW, 80);
+                y += 94;
+            }
+
+            addTable();
+            addMatrix();
+            addAnalysis();
+            addChallenge();
+            if (ops.length) pages.push(ops.join('\n'));
+
+            return createPdfBlob(pages, matrixImage);
+        }
+
+        function createPdfBlob(pageStreams, matrixImage) {
+            function dataUrlToBinary(dataUrl) {
+                return atob((dataUrl || '').split(',')[1] || '');
+            }
+
+            const imageBinary = matrixImage?.src ? dataUrlToBinary(matrixImage.src) : null;
+            const objects = [];
+            const catalogId = 1;
+            const pagesId = 2;
+            const fontRegularId = 3;
+            const fontBoldId = 4;
+            const imageId = imageBinary ? 5 : null;
+            let nextId = imageBinary ? 6 : 5;
+            const pageIds = [];
+
+            objects[catalogId] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+            objects[fontRegularId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+            objects[fontBoldId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+            if (imageBinary) {
+                objects[imageId] = `<< /Type /XObject /Subtype /Image /Width ${Math.round(matrixImage.width)} /Height ${Math.round(matrixImage.height)} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBinary.length} >>\nstream\n${imageBinary}\nendstream`;
+            }
+
+            pageStreams.forEach(stream => {
+                const pageId = nextId++;
+                const contentId = nextId++;
+                pageIds.push(pageId);
+                objects[contentId] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+                const imageResource = imageBinary ? `/XObject << /Im1 ${imageId} 0 R >>` : '';
+                objects[pageId] = `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${imageResource} >> /Contents ${contentId} 0 R >>`;
+            });
+
+            objects[pagesId] = `<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
+
+            let pdf = '%PDF-1.4\n%âãÏÓ\n';
+            const offsets = [0];
+            for (let id = 1; id < objects.length; id++) {
+                offsets[id] = pdf.length;
+                pdf += `${id} 0 obj\n${objects[id]}\nendobj\n`;
+            }
+
+            const xrefStart = pdf.length;
+            pdf += `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+            for (let id = 1; id < objects.length; id++) {
+                pdf += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
+            }
+            pdf += `trailer\n<< /Size ${objects.length} /Root ${catalogId} 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+            const bytes = new Uint8Array(pdf.length);
+            for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 0xff;
+            return new Blob([bytes], { type: 'application/pdf' });
+        }
+
+        function editDiagnostic() {
+            dashboardReady = false;
+            nextStep(3);
+            if (chart) {
+                setTimeout(() => chart.resize(), 250);
+            }
+        }
+
+        function isDashboardVisible() {
+            const step = document.getElementById('step-4');
+            return Boolean(step && step.classList.contains('active'));
+        }
+
+        function scheduleDashboardRefresh() {
+            if (!isDashboardVisible() || dashboardRefreshInProgress) return;
+            clearTimeout(dashboardRefreshTimer);
+            dashboardRefreshTimer = setTimeout(() => {
+                dashboardRefreshTimer = null;
+                if (!isDashboardVisible()) return;
+                const hasEvaluatedTasks = tasks.some(t => t.evaluated && (t.time > 0 || t.value > 0));
+                if (!hasEvaluatedTasks) return;
+                dashboardRefreshInProgress = true;
+                try {
+                    generateDashboard({ skipNavigation: true });
+                } finally {
+                    dashboardRefreshInProgress = false;
+                }
+            }, 120);
+        }
+
+        function markDashboardDirty() {
+            dashboardReady = false;
+            scheduleDashboardRefresh();
+        }
+
+        function bindDiagnosticChangeTracking() {
+            ['step-1', 'step-2', 'step-3'].forEach(id => {
+                const section = document.getElementById(id);
+                if (!section || section.dataset.dirtyBound) return;
+                section.dataset.dirtyBound = 'true';
+                section.addEventListener('input', markDashboardDirty);
+                section.addEventListener('change', markDashboardDirty);
+            });
+        }
+
+        bindDiagnosticChangeTracking();
+    </script>
+</body>
+</html>
